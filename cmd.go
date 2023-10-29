@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -131,12 +132,9 @@ func CreateABICommand() *cobra.Command {
 
 			events := Events(abi)
 
-			eventsJson, marshalErr := json.MarshalIndent(events, "", "  ")
-			if marshalErr != nil {
-				return marshalErr
+			for _, event := range events {
+				fmt.Printf("%s -- hash: %s\n", event.Name, event.Hash)
 			}
-
-			cmd.OutOrStdout().Write(eventsJson)
 
 			return nil
 		},
