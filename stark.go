@@ -23,7 +23,7 @@ type Starknet struct {
 	CurrentRequestID uint64
 }
 
-func (provider *Starknet) RPCMethod(method string, params []interface{}) (interface{}, error) {
+func (provider *Starknet) RPCMethod(method string, params []interface{}) (map[string]interface{}, error) {
 	requestRaw := RPCRequest{
 		RPCVersion: provider.RPCVersion,
 		ID:         provider.CurrentRequestID,
@@ -54,7 +54,7 @@ func (provider *Starknet) RPCMethod(method string, params []interface{}) (interf
 	}
 	defer response.Body.Close()
 
-	var result interface{}
+	var result map[string]interface{}
 	decodeErr := json.NewDecoder(response.Body).Decode(&result)
 	if decodeErr != nil {
 		return nil, decodeErr
@@ -70,5 +70,5 @@ func (provider *Starknet) Blocknumber() (uint64, error) {
 		return 0, err
 	}
 
-	return uint64(result.(map[string]interface{})["result"].(float64)), nil
+	return uint64(result["result"].(float64)), nil
 }
