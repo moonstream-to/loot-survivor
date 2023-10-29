@@ -1,16 +1,15 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"os"
 )
 
 func main() {
-	var name string
-
-	flag.StringVar(&name, "name", "", "Name")
-
-	flag.Parse()
-
-	fmt.Printf("Hello %s\n", name)
+	command := CreateRootCommand()
+	err := command.Execute()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
 }
