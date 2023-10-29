@@ -129,11 +129,14 @@ func CreateABICommand() *cobra.Command {
 				return unmarshalErr
 			}
 
-			for _, item := range abi {
-				if item["type"] == "event" {
-					cmd.Println(item["name"])
-				}
+			events := Events(abi)
+
+			eventsJson, marshalErr := json.MarshalIndent(events, "", "  ")
+			if marshalErr != nil {
+				return marshalErr
 			}
+
+			cmd.OutOrStdout().Write(eventsJson)
 
 			return nil
 		},
