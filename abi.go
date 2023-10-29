@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/crypto/sha3"
 )
 
 type SurvivorEventData struct {
@@ -20,7 +20,7 @@ type SurvivorEvent struct {
 	Data []SurvivorEventData `json:"data"`
 }
 
-func HashFromName(name string) string {
+func HashFromName(name string) (string, error) {
 	x := big.NewInt(0)
 	mask := big.NewInt(0)
 
@@ -30,14 +30,24 @@ func HashFromName(name string) string {
 	components := strings.Split(name, "::")
 	eventName := components[len(components)-1]
 
-	hashedName := crypto.Keccak256([]byte(eventName))
-	hashedEncodedName := big.NewInt(0).SetBytes(hashedName)
+	// Very important to use the LegacyKeccak256 here - to match Ethereum:
+	// https://pkg.go.dev/golang.org/x/crypto/sha3#NewLegacyKeccak256
+	hash := sha3.NewLegacyKeccak256()
+	_, hashErr := hash.Write([]byte(eventName))
+	if hashErr != nil {
+		return "", hashErr
+	}
+
+	b := make([]byte, 0)
+	hashedNameBytes := hash.Sum(b)
+
+	hashedEncodedName := big.NewInt(0).SetBytes(hashedNameBytes)
 
 	starknetHashedEncodedName := big.NewInt(0).And(hashedEncodedName, mask)
-	return hex.EncodeToString(starknetHashedEncodedName.Bytes())
+	return hex.EncodeToString(starknetHashedEncodedName.Bytes()), nil
 }
 
-func Events(abi []map[string]interface{}) []SurvivorEvent {
+func Events(abi []map[string]interface{}) ([]SurvivorEvent, error) {
 	numEvents := 0
 	for _, item := range abi {
 		if item["type"] == "event" && item["kind"] == "struct" {
@@ -49,9 +59,14 @@ func Events(abi []map[string]interface{}) []SurvivorEvent {
 	events := make([]SurvivorEvent, numEvents)
 	for _, item := range abi {
 		if item["type"] == "event" && item["kind"] == "struct" {
+			name := item["name"].(string)
+			hashedName, hashErr := HashFromName(name)
+			if hashErr != nil {
+				return nil, hashErr
+			}
 			events[currentIndex] = SurvivorEvent{
-				Name: item["name"].(string),
-				Hash: HashFromName(item["name"].(string)),
+				Name: name,
+				Hash: hashedName,
 			}
 			if item["members"] != nil {
 				membersArray := item["members"].([]interface{})
@@ -73,5 +88,5 @@ func Events(abi []map[string]interface{}) []SurvivorEvent {
 		}
 	}
 
-	return events
+	return events, nil
 }

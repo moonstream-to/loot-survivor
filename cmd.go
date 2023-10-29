@@ -130,7 +130,10 @@ func CreateABICommand() *cobra.Command {
 				return unmarshalErr
 			}
 
-			events := Events(abi)
+			events, filterErr := Events(abi)
+			if filterErr != nil {
+				return filterErr
+			}
 
 			for _, event := range events {
 				fmt.Printf("%s -- hash: %s\n", event.Name, event.Hash)
