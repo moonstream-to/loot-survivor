@@ -1,10 +1,11 @@
 package main
 
 import (
-	"net/http"
+	"context"
 	"os"
 	"time"
 
+	"github.com/NethermindEth/starknet.go/rpc"
 	"github.com/spf13/cobra"
 )
 
@@ -108,25 +109,59 @@ func CreateStarknetCommand(rootCmd *cobra.Command) *cobra.Command {
 	starkCmd.PersistentFlags().StringVarP(&RPCVersion, "rpcversion", "v", "2.0", "The version of the Starknet RPC protocol to use")
 	starkCmd.PersistentFlags().Uint64VarP(&timeout, "timeout", "t", 0, "The timeout for requests to your Starknet RPC provider")
 
-	blocknumberCmd := &cobra.Command{
-		Use:   "blocknumber",
+	blockNumberCmd := &cobra.Command{
+		Use:   "block-number",
 		Short: "Get the current block number on your Starknet RPC provider",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			provider := Starknet{
-				RPCVersion:  RPCVersion,
-				ProviderURL: providerURL,
-				Client:      &http.Client{Timeout: time.Duration(timeout) * time.Second},
+			client, clientErr := rpc.NewClient(providerURL)
+			if clientErr != nil {
+				return clientErr
 			}
-			blocknumber, err := provider.Blocknumber()
+
+			provider := rpc.NewProvider(client)
+
+			ctx := context.Background()
+			if timeout > 0 {
+				ctx, _ = context.WithDeadline(ctx, time.Now().Add(time.Duration(timeout)*time.Second))
+			}
+
+			blockNumber, err := provider.BlockNumber(ctx)
+
 			if err != nil {
 				return err
 			}
 
-			cmd.Println(blocknumber)
+			cmd.Println(blockNumber)
 			return nil
 		}}
 
-	starkCmd.AddCommand(blocknumberCmd)
+	chainIDCmd := &cobra.Command{
+		Use:   "chain-id",
+		Short: "Get the chain ID of the chain that your Starknet RPC provider is connected to",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, clientErr := rpc.NewClient(providerURL)
+			if clientErr != nil {
+				return clientErr
+			}
+
+			provider := rpc.NewProvider(client)
+
+			ctx := context.Background()
+			if timeout > 0 {
+				ctx, _ = context.WithDeadline(ctx, time.Now().Add(time.Duration(timeout)*time.Second))
+			}
+
+			chainID, err := provider.ChainID(ctx)
+
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(chainID)
+			return nil
+		}}
+
+	starkCmd.AddCommand(blockNumberCmd, chainIDCmd)
 
 	return starkCmd
 }
