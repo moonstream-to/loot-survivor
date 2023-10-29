@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"os"
 	"time"
 
@@ -20,9 +22,10 @@ func CreateRootCommand() *cobra.Command {
 	}
 
 	completionCmd := CreateCompletionCommand(rootCmd)
-	versionCmd := CreateVersionCommand(rootCmd)
-	starknetCmd := CreateStarknetCommand(rootCmd)
-	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd)
+	versionCmd := CreateVersionCommand()
+	starknetCmd := CreateStarknetCommand()
+	abiCmd := CreateABICommand()
+	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd, abiCmd)
 
 	return rootCmd
 }
@@ -81,7 +84,7 @@ To add survivor completions for all bash sessions:
 	return completionCmd
 }
 
-func CreateVersionCommand(rootCmd *cobra.Command) *cobra.Command {
+func CreateVersionCommand() *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print the version of survivor that you are currently using",
@@ -93,8 +96,56 @@ func CreateVersionCommand(rootCmd *cobra.Command) *cobra.Command {
 	return versionCmd
 }
 
-func CreateStarknetCommand(rootCmd *cobra.Command) *cobra.Command {
-	var providerURL, RPCVersion string
+func CreateABICommand() *cobra.Command {
+	var abiFile string
+	abiCmd := &cobra.Command{
+		Use:   "abi",
+		Short: "Interact with ABIs",
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
+		},
+	}
+
+	abiCmd.PersistentFlags().StringVarP(&abiFile, "abi", "a", "", "The ABI file to interact with")
+
+	eventsCmd := &cobra.Command{
+		Use:   "events",
+		Short: "Lists the events in an ABI file",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			infile, fileErr := os.Open(abiFile)
+			if fileErr != nil {
+				return fileErr
+			}
+			defer infile.Close()
+
+			contents, readErr := io.ReadAll(infile)
+			if readErr != nil {
+				return readErr
+			}
+
+			var abi []map[string]interface{}
+			unmarshalErr := json.Unmarshal(contents, &abi)
+			if unmarshalErr != nil {
+				return unmarshalErr
+			}
+
+			for _, item := range abi {
+				if item["type"] == "event" {
+					cmd.Println(item["name"])
+				}
+			}
+
+			return nil
+		},
+	}
+
+	abiCmd.AddCommand(eventsCmd)
+
+	return abiCmd
+}
+
+func CreateStarknetCommand() *cobra.Command {
+	var providerURL, RPCVersion, abiFile, eventName string
 	var timeout uint64
 
 	starkCmd := &cobra.Command{
@@ -161,7 +212,25 @@ func CreateStarknetCommand(rootCmd *cobra.Command) *cobra.Command {
 			return nil
 		}}
 
-	starkCmd.AddCommand(blockNumberCmd, chainIDCmd)
+	eventsCmd := &cobra.Command{
+		Use:   "events",
+		Short: "Crawl events from your Starknet RPC provider",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// client, clientErr := rpc.NewClient(providerURL)
+			// if clientErr != nil {
+			// 	return clientErr
+			// }
+
+			// provider := rpc.NewProvider(client)
+
+			return nil
+		},
+	}
+
+	eventsCmd.Flags().StringVarP(&abiFile, "abi", "a", "", "The ABI containing the events you want to crawl")
+	eventsCmd.Flags().StringVarP(&eventName, "event", "e", "", "The name of the event you want to crawl")
+
+	starkCmd.AddCommand(blockNumberCmd, chainIDCmd, eventsCmd)
 
 	return starkCmd
 }
