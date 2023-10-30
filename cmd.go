@@ -235,10 +235,28 @@ func CreateStarknetCommand() *cobra.Command {
 
 			eventsChan := make(chan CrawledEvent)
 
+			// If "fromBlock" is not specified, find the block at which the contract was deployed and
+			// use that instead.
+			if fromBlock == 0 {
+				addressFelt, parseAddressErr := AddressFelt(contractAddress)
+				if parseAddressErr != nil {
+					return parseAddressErr
+				}
+				deploymentBlock, fromBlockErr := DeploymentBlock(ctx, provider, addressFelt)
+				if fromBlockErr != nil {
+					return fromBlockErr
+				}
+				fromBlock = deploymentBlock
+			}
+
 			go ContractEvents(ctx, provider, contractAddress, eventsChan, hotThreshold, time.Duration(hotInterval)*time.Millisecond, time.Duration(coldInterval)*time.Millisecond, fromBlock, toBlock, confirmations, batchSize)
 
 			for event := range eventsChan {
-				fmt.Println(event)
+				serializedEvent, marshalErr := json.Marshal(event)
+				if marshalErr != nil {
+					cmd.ErrOrStderr().Write([]byte(marshalErr.Error()))
+				}
+				cmd.Println(string(serializedEvent))
 			}
 
 			return nil

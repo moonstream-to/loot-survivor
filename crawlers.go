@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/NethermindEth/juno/core/felt"
@@ -15,6 +13,22 @@ import (
 
 var ErrAddressIsNotContract error = errors.New("address is not a contract")
 var ErrPotentialReorg error = errors.New("potential reorg")
+
+func AddressFelt(address string) (*felt.Felt, error) {
+	fieldAdditiveIdentity := fp.NewElement(0)
+
+	if address[:2] == "0x" {
+		address = address[2:]
+	}
+	decodedAddress, decodeErr := hex.DecodeString(address)
+	if decodeErr != nil {
+		return nil, decodeErr
+	}
+	addressFelt := felt.NewFelt(&fieldAdditiveIdentity)
+	addressFelt.SetBytes(decodedAddress)
+
+	return addressFelt, nil
+}
 
 // Perform a binary search to determine the block number at which the contract at the given address
 // was deployed.
@@ -144,11 +158,11 @@ func SingleEventFilter(fromBlock, toBlock uint64, contractAddress, eventName str
 }
 
 type CrawledEvent struct {
-	BlockNumber     uint64
-	BlockHash       *felt.Felt
-	TransactionHash *felt.Felt
-	FromAddress     *felt.Felt
-	Parameters      []*felt.Felt
+	BlockNumber     uint64       `json:"block_number"`
+	BlockHash       *felt.Felt   `json:"block_hash"`
+	TransactionHash *felt.Felt   `json:"tx_hash"`
+	FromAddress     *felt.Felt   `json:"from_address"`
+	Parameters      []*felt.Felt `json:"parameters"`
 }
 
 func ContractEvents(ctx context.Context, provider *rpc.Provider, contractAddress string, outChan chan<- CrawledEvent, hotThreshold int, hotInterval, coldInterval time.Duration, fromBlock, toBlock uint64, confirmations, batchSize int) error {
@@ -225,11 +239,9 @@ func ContractEvents(ctx context.Context, provider *rpc.Provider, contractAddress
 				cursor.ContinuationToken = eventsChunk.ContinuationToken
 				cursor.Interval = hotInterval
 			} else {
-				fmt.Fprintf(os.Stderr, "From: %d, To: %d\n", cursor.FromBlock, cursor.ToBlock)
 				cursor.FromBlock = cursor.ToBlock + 1
 				cursor.ToBlock = toBlock
 				cursor.ContinuationToken = ""
-				fmt.Fprintf(os.Stderr, "From: %d, To: %d\n", cursor.FromBlock, cursor.ToBlock)
 				if len(eventsChunk.Events) > 0 {
 					cursor.Heat++
 					if cursor.Heat >= hotThreshold {
