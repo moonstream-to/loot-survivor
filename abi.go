@@ -6,9 +6,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/NethermindEth/juno/core/felt"
-	"github.com/NethermindEth/starknet.go/rpc"
-	"github.com/consensys/gnark-crypto/ecc/stark-curve/fp"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -95,50 +92,4 @@ func Events(abi []map[string]interface{}) ([]SurvivorEvent, error) {
 	}
 
 	return events, nil
-}
-
-func CreateFilter(fromBlock, toBlock uint64, contractAddress, eventName string, abi []map[string]interface{}) (*rpc.EventFilter, error) {
-	result := rpc.EventFilter{FromBlock: rpc.BlockID{Number: &fromBlock}, ToBlock: rpc.BlockID{Number: &toBlock}}
-
-	fieldAdditiveIdentity := fp.NewElement(0)
-
-	if contractAddress != "" {
-		if contractAddress[:2] == "0x" {
-			contractAddress = contractAddress[2:]
-		}
-		decodedAddress, decodeErr := hex.DecodeString(contractAddress)
-		if decodeErr != nil {
-			return &result, decodeErr
-		}
-		result.Address = felt.NewFelt(&fieldAdditiveIdentity)
-		result.Address.SetBytes(decodedAddress)
-	}
-
-	abiEvents, abiErr := Events(abi)
-	if abiErr != nil {
-		return &result, abiErr
-	}
-
-	eventHash := ""
-	for _, event := range abiEvents {
-		if event.Name == eventName {
-			eventHash = event.Hash
-			break
-		}
-	}
-	if eventHash == "" {
-		return &result, ErrNoSuchEventInABI
-	}
-
-	decodedEventHash, decodeErr := hex.DecodeString(eventHash)
-	if decodeErr != nil {
-		return &result, decodeErr
-	}
-	eventKeyFelt := felt.NewFelt(&fieldAdditiveIdentity)
-	eventKeyFelt.SetBytes(decodedEventHash)
-	result.Keys = [][]*felt.Felt{
-		{eventKeyFelt},
-	}
-
-	return &result, nil
 }

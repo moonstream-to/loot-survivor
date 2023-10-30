@@ -154,9 +154,9 @@ func CreateABICommand() *cobra.Command {
 }
 
 func CreateStarknetCommand() *cobra.Command {
-	var providerURL, abiFile, eventName, contractAddress, continuationToken string
+	var providerURL, contractAddress string
 	var timeout, fromBlock, toBlock uint64
-	var batchSize int
+	var batchSize, coldInterval, hotInterval, hotThreshold, confirmations int
 
 	starkCmd := &cobra.Command{
 		Use:   "stark",
@@ -225,73 +225,32 @@ func CreateStarknetCommand() *cobra.Command {
 		Use:   "events",
 		Short: "Crawl events from your Starknet RPC provider",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			infile, fileErr := os.Open(abiFile)
-			if fileErr != nil {
-				return fileErr
-			}
-			defer infile.Close()
-
-			contents, readErr := io.ReadAll(infile)
-			if readErr != nil {
-				return readErr
-			}
-
-			var abi []map[string]interface{}
-			unmarshalErr := json.Unmarshal(contents, &abi)
-			if unmarshalErr != nil {
-				return unmarshalErr
-			}
-
-			filter, filterErr := CreateFilter(fromBlock, toBlock, contractAddress, eventName, abi)
-			if filterErr != nil {
-				return filterErr
-			}
-
 			client, clientErr := rpc.NewClient(providerURL)
 			if clientErr != nil {
 				return clientErr
 			}
 
 			provider := rpc.NewProvider(client)
-
 			ctx := context.Background()
-			if timeout > 0 {
-				ctx, _ = context.WithDeadline(ctx, time.Now().Add(time.Duration(timeout)*time.Second))
-			}
 
-			eventsInput := rpc.EventsInput{
-				EventFilter:       *filter,
-				ResultPageRequest: rpc.ResultPageRequest{ChunkSize: batchSize, ContinuationToken: continuationToken},
-			}
+			eventsChan := make(chan CrawledEvent)
 
-			eventChunk, err := provider.Events(ctx, eventsInput)
-			if err != nil {
-				return err
-			}
+			go ContractEvents(ctx, provider, contractAddress, eventsChan, hotThreshold, time.Duration(hotInterval)*time.Millisecond, time.Duration(coldInterval)*time.Millisecond, fromBlock, confirmations, batchSize)
 
-			for _, event := range eventChunk.Events {
-				cmd.Printf("blocknumber:%d,blockhash:%s,", event.BlockNumber, event.BlockHash.String())
-				cmd.Printf("txhash:%s,", event.TransactionHash.String())
-				cmd.Printf("contract:%s,args:", event.FromAddress.String())
-				for _, param := range event.Data {
-					cmd.Printf(" %s", param.String())
-				}
-				cmd.Printf("\n")
-			}
-
-			if eventChunk.ContinuationToken != "" {
-				cmd.Printf("Continuation token: %s\n", eventChunk.ContinuationToken)
+			for event := range eventsChan {
+				fmt.Println(event)
 			}
 
 			return nil
 		},
 	}
 
-	eventsCmd.Flags().StringVarP(&abiFile, "abi", "a", "", "The ABI containing the events you want to crawl")
 	eventsCmd.Flags().StringVarP(&contractAddress, "contract", "c", "", "The address of the contract from which to crawl events (if not provided, no contract constraint will be specified)")
-	eventsCmd.Flags().StringVarP(&eventName, "event", "e", "", "The name of the event you want to crawl")
-	eventsCmd.Flags().StringVarP(&continuationToken, "continuation", "T", "", "Continuation token for the crawl")
 	eventsCmd.Flags().IntVarP(&batchSize, "batch-size", "N", 100, "The number of events to fetch per batch (defaults to 100)")
+	eventsCmd.Flags().IntVar(&hotThreshold, "hot-threshold", 2, "Number of successive iterations which must return events before we consider the crawler hot")
+	eventsCmd.Flags().IntVar(&hotInterval, "hot-interval", 100, "Milliseconds at which to poll the provider for updates on the contract while the crawl is hot")
+	eventsCmd.Flags().IntVar(&coldInterval, "cold-interval", 10000, "Milliseconds at which to poll the provider for updates on the contract while the crawl is cold")
+	eventsCmd.Flags().IntVar(&confirmations, "confirmations", 5, "Number of confirmations to wait for before considering a block canonical")
 	eventsCmd.Flags().Uint64Var(&fromBlock, "from", 0, "The block number from which to start crawling")
 	eventsCmd.Flags().Uint64Var(&toBlock, "to", 0, "The block number to which to crawl")
 
