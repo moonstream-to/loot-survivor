@@ -2,13 +2,17 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"time"
 
+	"github.com/NethermindEth/juno/core/felt"
 	"github.com/NethermindEth/starknet.go/rpc"
+	"github.com/consensys/gnark-crypto/ecc/stark-curve/fp"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +30,8 @@ func CreateRootCommand() *cobra.Command {
 	versionCmd := CreateVersionCommand()
 	starknetCmd := CreateStarknetCommand()
 	abiCmd := CreateABICommand()
-	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd, abiCmd)
+	findDeploymentBlockCmd := CreateFindDeploymentCmd()
+	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd, abiCmd, findDeploymentBlockCmd)
 
 	return rootCmd
 }
@@ -149,7 +154,7 @@ func CreateABICommand() *cobra.Command {
 }
 
 func CreateStarknetCommand() *cobra.Command {
-	var providerURL, RPCVersion, abiFile, eventName, contractAddress, continuationToken string
+	var providerURL, abiFile, eventName, contractAddress, continuationToken string
 	var timeout, fromBlock, toBlock uint64
 	var batchSize int
 
@@ -162,7 +167,6 @@ func CreateStarknetCommand() *cobra.Command {
 	}
 
 	starkCmd.PersistentFlags().StringVarP(&providerURL, "provider", "p", os.Getenv("STARKNET_RPC_URL"), "The URL of your Starknet RPC provider (defaults to value of STARKNET_RPC_URL environment variable)")
-	starkCmd.PersistentFlags().StringVarP(&RPCVersion, "rpcversion", "v", "2.0", "The version of the Starknet RPC protocol to use")
 	starkCmd.PersistentFlags().Uint64VarP(&timeout, "timeout", "t", 0, "The timeout for requests to your Starknet RPC provider")
 
 	blockNumberCmd := &cobra.Command{
@@ -294,4 +298,49 @@ func CreateStarknetCommand() *cobra.Command {
 	starkCmd.AddCommand(blockNumberCmd, chainIDCmd, eventsCmd)
 
 	return starkCmd
+}
+
+func CreateFindDeploymentCmd() *cobra.Command {
+	var providerURL, contractAddress string
+
+	findDeploymentCmd := &cobra.Command{
+		Use:   "find-deployment-block",
+		Short: "Discover the block number in which a contract was deployed",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, clientErr := rpc.NewClient(providerURL)
+			if clientErr != nil {
+				return clientErr
+			}
+			provider := rpc.NewProvider(client)
+			ctx := context.Background()
+
+			if contractAddress == "" {
+				return errors.New("you must provide a contract address using -c/--contract")
+			}
+
+			fieldAdditiveIdentity := fp.NewElement(0)
+			if contractAddress[:2] == "0x" {
+				contractAddress = contractAddress[2:]
+			}
+			decodedAddress, decodeErr := hex.DecodeString(contractAddress)
+			if decodeErr != nil {
+				return decodeErr
+			}
+			address := felt.NewFelt(&fieldAdditiveIdentity)
+			address.SetBytes(decodedAddress)
+
+			deploymentBlock, err := DeploymentBlock(ctx, provider, address)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(deploymentBlock)
+			return nil
+		},
+	}
+
+	findDeploymentCmd.Flags().StringVarP(&providerURL, "provider", "p", os.Getenv("STARKNET_RPC_URL"), "The URL of your Starknet RPC provider (defaults to value of STARKNET_RPC_URL environment variable)")
+	findDeploymentCmd.Flags().StringVarP(&contractAddress, "contract", "c", "", "The address of the smart contract to find the deployment block for")
+
+	return findDeploymentCmd
 }
