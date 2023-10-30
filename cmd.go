@@ -235,7 +235,7 @@ func CreateStarknetCommand() *cobra.Command {
 
 			eventsChan := make(chan CrawledEvent)
 
-			go ContractEvents(ctx, provider, contractAddress, eventsChan, hotThreshold, time.Duration(hotInterval)*time.Millisecond, time.Duration(coldInterval)*time.Millisecond, fromBlock, confirmations, batchSize)
+			go ContractEvents(ctx, provider, contractAddress, eventsChan, hotThreshold, time.Duration(hotInterval)*time.Millisecond, time.Duration(coldInterval)*time.Millisecond, fromBlock, toBlock, confirmations, batchSize)
 
 			for event := range eventsChan {
 				fmt.Println(event)
@@ -252,7 +252,7 @@ func CreateStarknetCommand() *cobra.Command {
 	eventsCmd.Flags().IntVar(&coldInterval, "cold-interval", 10000, "Milliseconds at which to poll the provider for updates on the contract while the crawl is cold")
 	eventsCmd.Flags().IntVar(&confirmations, "confirmations", 5, "Number of confirmations to wait for before considering a block canonical")
 	eventsCmd.Flags().Uint64Var(&fromBlock, "from", 0, "The block number from which to start crawling")
-	eventsCmd.Flags().Uint64Var(&toBlock, "to", 0, "The block number to which to crawl")
+	eventsCmd.Flags().Uint64Var(&toBlock, "to", 0, "The block number to which to crawl (set to 0 for continuous crawl)")
 
 	starkCmd.AddCommand(blockNumberCmd, chainIDCmd, eventsCmd)
 

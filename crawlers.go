@@ -151,7 +151,7 @@ type CrawledEvent struct {
 	Parameters      []*felt.Felt
 }
 
-func ContractEvents(ctx context.Context, provider *rpc.Provider, contractAddress string, outChan chan<- CrawledEvent, hotThreshold int, hotInterval, coldInterval time.Duration, fromBlock uint64, confirmations, batchSize int) error {
+func ContractEvents(ctx context.Context, provider *rpc.Provider, contractAddress string, outChan chan<- CrawledEvent, hotThreshold int, hotInterval, coldInterval time.Duration, fromBlock, toBlock uint64, confirmations, batchSize int) error {
 	defer func() { close(outChan) }()
 
 	type CrawlCursor struct {
@@ -162,7 +162,7 @@ func ContractEvents(ctx context.Context, provider *rpc.Provider, contractAddress
 		Heat              int
 	}
 
-	cursor := CrawlCursor{FromBlock: fromBlock, ToBlock: 0, ContinuationToken: "", Interval: hotInterval, Heat: 0}
+	cursor := CrawlCursor{FromBlock: fromBlock, ToBlock: toBlock, ContinuationToken: "", Interval: hotInterval, Heat: 0}
 
 	count := 0
 
@@ -171,7 +171,6 @@ func ContractEvents(ctx context.Context, provider *rpc.Provider, contractAddress
 		case <-ctx.Done():
 			return nil
 		case <-time.After(cursor.Interval):
-			fmt.Fprintf(os.Stderr, "here we go again: %d\n", count)
 			count++
 			if cursor.ToBlock == 0 {
 				currentblock, blockErr := provider.BlockNumber(ctx)
@@ -185,8 +184,14 @@ func ContractEvents(ctx context.Context, provider *rpc.Provider, contractAddress
 				// Crawl is cold, slow things down.
 				cursor.Interval = coldInterval
 
-				// Breaks out of select, not for loop. This effects a wait for the given interval.
-				break
+				if toBlock == 0 {
+					// If the crawl is continuous, breaks out of select, not for loop.
+					// This effects a wait for the given interval.
+					break
+				} else {
+					// If crawl is not continuous, just ends the crawl.
+					return nil
+				}
 			}
 
 			filter, filterErr := AllEventsFilter(cursor.FromBlock, cursor.ToBlock, contractAddress)
@@ -220,9 +225,11 @@ func ContractEvents(ctx context.Context, provider *rpc.Provider, contractAddress
 				cursor.ContinuationToken = eventsChunk.ContinuationToken
 				cursor.Interval = hotInterval
 			} else {
+				fmt.Fprintf(os.Stderr, "From: %d, To: %d\n", cursor.FromBlock, cursor.ToBlock)
 				cursor.FromBlock = cursor.ToBlock + 1
-				cursor.ToBlock = 0
+				cursor.ToBlock = toBlock
 				cursor.ContinuationToken = ""
+				fmt.Fprintf(os.Stderr, "From: %d, To: %d\n", cursor.FromBlock, cursor.ToBlock)
 				if len(eventsChunk.Events) > 0 {
 					cursor.Heat++
 					if cursor.Heat >= hotThreshold {
