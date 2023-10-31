@@ -447,7 +447,60 @@ last used the adventurer in a game session.
 		},
 	}
 
-	leaderboardsCmd.AddCommand(beastSlayersCmd)
+	artfulDodgersCmd := &cobra.Command{
+		Use:   "artful-dodgers",
+		Short: "Leaderboard of the best obstacle dodgers",
+		Long: `Leaderboard of the best obstacle dodgers
+
+NOTE: This is a leaderboard of adventurers, not their owners.
+
+The primary score on this leaderboard is the number of obstacles dodged by each adventurer.
+
+The leaderboard tracks the maximum level of obstacles dodged by each adventurer as a secondary score.
+
+Finally, the leaderboard also lists the active owner for each adventurer, defined as the account that
+last dodged an obstacle with the adventurer.
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ifp := os.Stdin
+			var infileErr error
+			if infile != "" && infile != "-" {
+				ifp, infileErr = os.Open(infile)
+				if infileErr != nil {
+					return infileErr
+				}
+				defer ifp.Close()
+			}
+
+			ofp := os.Stdout
+			var outfileErr error
+			if outfile != "" {
+				ofp, outfileErr = os.Create(outfile)
+				if outfileErr != nil {
+					return outfileErr
+				}
+				defer ofp.Close()
+			}
+
+			leaderboard, leaderboardErr := ArtfulDodgersLeaderboard(ifp)
+			if leaderboardErr != nil {
+				return leaderboardErr
+			}
+
+			outputEncoder := json.NewEncoder(ofp)
+			outputEncoder.Encode(leaderboard)
+
+			if push {
+				pushErr := Push(leaderboardID, accessToken, leaderboard, true)
+				if pushErr != nil {
+					return pushErr
+				}
+			}
+			return nil
+		},
+	}
+
+	leaderboardsCmd.AddCommand(beastSlayersCmd, artfulDodgersCmd)
 
 	return leaderboardsCmd
 }

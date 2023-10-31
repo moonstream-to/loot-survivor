@@ -15,7 +15,7 @@ Events from LootSurvivor ABI:
 - [x] game::Game::UpgradesAvailable -- hash: b497e78370ca3376efb8bd098ba912913a571e447c1b2c1ae4de95899d564f
 - [ ] game::Game::DiscoveredHealth -- hash: 0219a5a75d3a985c139001f09646ef572f59a6a0b5f044b163d8118c311e30ba
 - [ ] game::Game::DiscoveredGold -- hash: 15b7d298d615bc8a7f835a151be6f79848d7a28abba637e6608feac27255a2
-- [-] game::Game::DodgedObstacle -- hash: 033f51c3c3f7cce204e753c2254ff046ea56bfadfa22dee85814cbee84c9a63f
+- [x] game::Game::DodgedObstacle -- hash: 033f51c3c3f7cce204e753c2254ff046ea56bfadfa22dee85814cbee84c9a63f
 - [ ] game::Game::HitByObstacle -- hash: 9ebf5c9567959039f24c635b67d3a000eabf12ba43906df38b9cdbd501317a
 - [ ] game::Game::AmbushedByBeast -- hash: 0317b067327eb6721c6e2e3e299b24a39b58d33771aa154e03a53f8978aa7e68
 - [ ] game::Game::DiscoveredBeast -- hash: 0253a02657b86e566e59683306f5d7b2032b7814d140eeab9b85f8fcca6780fb

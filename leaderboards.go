@@ -66,20 +66,15 @@ func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 	scanner := bufio.NewScanner(eventsFile)
 	for scanner.Scan() {
 		line := scanner.Text()
-		var parsedEvent ParsedEvent
-		unmarshalErr := json.Unmarshal([]byte(line), &parsedEvent)
+		var partialEvent PartialEvent
+		unmarshalErr := json.Unmarshal([]byte(line), &partialEvent)
 		if unmarshalErr != nil {
 			return []LeaderboardScore{}, unmarshalErr
 		}
 
-		if parsedEvent.Name == EVENT_SLAYED_BEAST {
-			// Need to figure out a better way of doing this.
-			jsonBytes, marshalErr := json.Marshal(parsedEvent.Event)
-			if marshalErr != nil {
-				return []LeaderboardScore{}, marshalErr
-			}
+		if partialEvent.Name == EVENT_SLAYED_BEAST {
 			var event SlayedBeastEvent
-			unmarshalErr := json.Unmarshal(jsonBytes, &event)
+			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
 			}
@@ -96,14 +91,73 @@ func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			if event.BeastSpecs.Level > maxLevel {
 				maxLevels[adventurer] = event.BeastSpecs.Level
 			}
-		} else if parsedEvent.Name == EVENT_START_GAME {
-			// Need to figure out a better way of doing this.
-			jsonBytes, marshalErr := json.Marshal(parsedEvent.Event)
-			if marshalErr != nil {
-				return []LeaderboardScore{}, marshalErr
-			}
+		} else if partialEvent.Name == EVENT_START_GAME {
 			var event StartGameEvent
-			unmarshalErr := json.Unmarshal(jsonBytes, &event)
+			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
+			if unmarshalErr != nil {
+				return []LeaderboardScore{}, unmarshalErr
+			}
+
+			adventurer := event.AdventurerState.AdventurerID
+			name := event.AdventurerMeta.Name
+
+			names[adventurer] = fmt.Sprintf("%s - %s", name, adventurer)
+		}
+	}
+
+	leaderboard := make([]LeaderboardScore, len(scores))
+	i := 0
+	for adventurer, score := range scores {
+		leaderboard[i] = LeaderboardScore{
+			Address: names[adventurer],
+			Score:   int(score),
+			PointsData: map[string]interface{}{
+				"max_level":    maxLevels[adventurer],
+				"active_owner": activeOwners[adventurer],
+			},
+		}
+		i++
+	}
+
+	return leaderboard, nil
+}
+
+func ArtfulDodgersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
+	names := make(map[string]string)
+	activeOwners := make(map[string]string)
+	scores := make(map[string]uint64)
+	maxLevels := make(map[string]uint64)
+	scanner := bufio.NewScanner(eventsFile)
+	for scanner.Scan() {
+		line := scanner.Text()
+		var partialEvent PartialEvent
+		unmarshalErr := json.Unmarshal([]byte(line), &partialEvent)
+		if unmarshalErr != nil {
+			return []LeaderboardScore{}, unmarshalErr
+		}
+
+		if partialEvent.Name == EVENT_DODGED_OBSTACLE {
+			var event DodgedObstacleEvent
+			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
+			if unmarshalErr != nil {
+				return []LeaderboardScore{}, unmarshalErr
+			}
+
+			adventurer := event.ObstacleEvent.AdventurerState.AdventurerID
+
+			owner := event.ObstacleEvent.AdventurerState.Owner
+			activeOwners[adventurer] = owner
+
+			score := scores[adventurer]
+			scores[adventurer] = score + 1
+
+			maxLevel := maxLevels[adventurer]
+			if event.ObstacleEvent.ObstacleDetails.Level > maxLevel {
+				maxLevels[adventurer] = event.ObstacleEvent.ObstacleDetails.Level
+			}
+		} else if partialEvent.Name == EVENT_START_GAME {
+			var event StartGameEvent
+			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
 			}
