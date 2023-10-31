@@ -50,9 +50,8 @@ var ErrParsingStats error = errors.New("could not parse stats")
 var ErrParsingCombatSpec error = errors.New("could not parse combat spec")
 
 type ParsedEvent struct {
-	Name string `json:"name"`
-	// TODO: Add json annotation
-	Event interface{}
+	Name  string      `json:"name"`
+	Event interface{} `json:"event"`
 }
 
 var EVENT_UNKNOWN string = "UNKNOWN"
