@@ -33,6 +33,10 @@ func CreateRootCommand() *cobra.Command {
 	findDeploymentBlockCmd := CreateFindDeploymentCmd()
 	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd, abiCmd, findDeploymentBlockCmd)
 
+	// By default, cobra Command objects write to stderr. We have to forcibly set them to output to
+	// stdout.
+	rootCmd.SetOut(os.Stdout)
+
 	return rootCmd
 }
 
