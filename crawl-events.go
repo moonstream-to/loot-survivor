@@ -13,6 +13,16 @@ import (
 
 var ErrPotentialReorg error = errors.New("potential reorg")
 
+type CrawledEvent struct {
+	BlockNumber     uint64       `json:"block_number"`
+	BlockHash       *felt.Felt   `json:"block_hash"`
+	TransactionHash *felt.Felt   `json:"tx_hash"`
+	FromAddress     *felt.Felt   `json:"from_address"`
+	PrimaryKey      *felt.Felt   `json:"primary_key"`
+	Keys            []*felt.Felt `json:"keys"`
+	Parameters      []*felt.Felt `json:"parameters"`
+}
+
 func AllEventsFilter(fromBlock, toBlock uint64, contractAddress string) (*rpc.EventFilter, error) {
 	result := rpc.EventFilter{FromBlock: rpc.BlockID{Number: &fromBlock}, ToBlock: rpc.BlockID{Number: &toBlock}}
 
@@ -69,16 +79,6 @@ func SingleEventFilter(fromBlock, toBlock uint64, contractAddress, eventName str
 	}
 
 	return result, nil
-}
-
-type CrawledEvent struct {
-	BlockNumber     uint64       `json:"block_number"`
-	BlockHash       *felt.Felt   `json:"block_hash"`
-	TransactionHash *felt.Felt   `json:"tx_hash"`
-	FromAddress     *felt.Felt   `json:"from_address"`
-	PrimaryKey      *felt.Felt   `json:"primary_key"`
-	Keys            []*felt.Felt `json:"keys"`
-	Parameters      []*felt.Felt `json:"parameters"`
 }
 
 func ContractEvents(ctx context.Context, provider *rpc.Provider, contractAddress string, outChan chan<- CrawledEvent, hotThreshold int, hotInterval, coldInterval time.Duration, fromBlock, toBlock uint64, confirmations, batchSize int) error {
