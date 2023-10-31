@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/hex"
 	"encoding/json"
@@ -32,7 +33,8 @@ func CreateRootCommand() *cobra.Command {
 	abiCmd := CreateABICommand()
 	findDeploymentBlockCmd := CreateFindDeploymentCmd()
 	leaderboardsCmd := CreateLeaderboardsCmd()
-	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd, abiCmd, findDeploymentBlockCmd, leaderboardsCmd)
+	reparseCmd := CreateReparseCmd()
+	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd, abiCmd, findDeploymentBlockCmd, leaderboardsCmd, reparseCmd)
 
 	// By default, cobra Command objects write to stderr. We have to forcibly set them to output to
 	// stdout.
@@ -364,12 +366,6 @@ func CreateLeaderboardsCmd() *cobra.Command {
 		Use:   "leaderboards",
 		Short: "Generates Loot Survivor leaderboards and can push them to the Moonstream Leaderboards API",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if infile == "" {
-				return errors.New("you must provide an input file using -i/--infile")
-			}
-			if outfile == "" {
-				return errors.New("you must provide an output file using -o/--outfile")
-			}
 			if push {
 				if leaderboardID == "" {
 					leaderboardIDFromEnv := os.Getenv("MOONSTREAM_LEADERBOARD_ID")
@@ -392,8 +388,8 @@ func CreateLeaderboardsCmd() *cobra.Command {
 			cmd.Help()
 		},
 	}
-	leaderboardsCmd.PersistentFlags().StringVarP(&infile, "infile", "i", "", "File containing crawled events from which to build the leaderboard (as produced by the \"loot-survivor stark events\" command)")
-	leaderboardsCmd.PersistentFlags().StringVarP(&outfile, "outfile", "o", "", "File to write leaderboard to")
+	leaderboardsCmd.PersistentFlags().StringVarP(&infile, "infile", "i", "", "File containing crawled events from which to build the leaderboard (as produced by the \"loot-survivor stark events\" command, defaults to stdin)")
+	leaderboardsCmd.PersistentFlags().StringVarP(&outfile, "outfile", "o", "", "File to write leaderboard to (defaults to stdout)")
 	leaderboardsCmd.PersistentFlags().BoolVar(&push, "push", false, "Set this option to pus the leaderboard to the Moonstream Leaderboard API")
 	leaderboardsCmd.PersistentFlags().StringVarP(&leaderboardID, "leaderboard-id", "l", "", "Leaderboard ID for the Moonstream Leaderboard (look up or generate at https://moonstream.to, defaults to value of MOONSTREAM_LEADERBOARD_ID environment variable)")
 	leaderboardsCmd.PersistentFlags().StringVarP(&accessToken, "access-token", "t", "", "Access token for Moonstream API (get from https://moonstream.to, defaults to value of MOONSTREAM_ACCESS_TOKEN environment variable)")
@@ -413,22 +409,30 @@ Finally, the leaderboard also lists the active owner for each adventurer, define
 last used the adventurer in a game session.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ifp, infileErr := os.Open(infile)
-			if infileErr != nil {
-				return infileErr
+			ifp := os.Stdin
+			var infileErr error
+			if infile != "" && infile != "-" {
+				ifp, infileErr = os.Open(infile)
+				if infileErr != nil {
+					return infileErr
+				}
+				defer ifp.Close()
 			}
-			defer ifp.Close()
+
+			ofp := os.Stdout
+			var outfileErr error
+			if outfile != "" {
+				ofp, outfileErr = os.Create(outfile)
+				if outfileErr != nil {
+					return outfileErr
+				}
+				defer ofp.Close()
+			}
 
 			leaderboard, leaderboardErr := BeastSlayersLeaderboard(ifp)
 			if leaderboardErr != nil {
 				return leaderboardErr
 			}
-
-			ofp, outfileErr := os.Create(outfile)
-			if outfileErr != nil {
-				return outfileErr
-			}
-			defer ofp.Close()
 
 			outputEncoder := json.NewEncoder(ofp)
 			outputEncoder.Encode(leaderboard)
@@ -446,4 +450,96 @@ last used the adventurer in a game session.
 	leaderboardsCmd.AddCommand(beastSlayersCmd)
 
 	return leaderboardsCmd
+}
+
+func CreateReparseCmd() *cobra.Command {
+	var infile, outfile string
+
+	reparseCmd := &cobra.Command{
+		Use:   "reparse",
+		Short: "Reparse an file (as produced by the \"stark events\" command) to process previously unknown events",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ifp := os.Stdin
+			var infileErr error
+			if infile != "" && infile != "-" {
+				ifp, infileErr = os.Open(infile)
+				if infileErr != nil {
+					return infileErr
+				}
+				defer ifp.Close()
+			}
+
+			ofp := os.Stdout
+			var outfileErr error
+			if outfile != "" {
+				ofp, outfileErr = os.Create(outfile)
+				if outfileErr != nil {
+					return outfileErr
+				}
+				defer ofp.Close()
+			}
+
+			parser, newParserErr := NewParser()
+			if newParserErr != nil {
+				return newParserErr
+			}
+
+			newline := []byte("\n")
+
+			scanner := bufio.NewScanner(ifp)
+			for scanner.Scan() {
+				var partialEvent PartialEvent
+				line := scanner.Text()
+				json.Unmarshal([]byte(line), &partialEvent)
+
+				passThrough := true
+
+				if partialEvent.Name == EVENT_UNKNOWN {
+					var event CrawledEvent
+					json.Unmarshal(partialEvent.Event, &event)
+					parsedEvent, parseErr := parser.Parse(event)
+					if parseErr == nil {
+						passThrough = false
+
+						parsedEventBytes, marshalErr := json.Marshal(parsedEvent)
+						if marshalErr != nil {
+							return marshalErr
+						}
+
+						_, writeErr := ofp.Write(parsedEventBytes)
+						if writeErr != nil {
+							return writeErr
+						}
+						_, writeErr = ofp.Write(newline)
+						if writeErr != nil {
+							return writeErr
+						}
+					}
+				}
+
+				if passThrough {
+					partialEventBytes, marshalErr := json.Marshal(partialEvent)
+					if marshalErr != nil {
+						return marshalErr
+					}
+
+					_, writeErr := ofp.Write(partialEventBytes)
+					if writeErr != nil {
+						return writeErr
+					}
+					_, writeErr = ofp.Write(newline)
+					if writeErr != nil {
+						return writeErr
+					}
+				}
+			}
+
+			return nil
+		},
+	}
+
+	reparseCmd.Flags().StringVarP(&infile, "infile", "i", "", "File containing crawled events from which to build the leaderboard (as produced by the \"loot-survivor stark events\" command, defaults to stdin)")
+	reparseCmd.Flags().StringVarP(&outfile, "outfile", "o", "", "File to write reparsed events to (defaults to stdout)")
+
+	return reparseCmd
 }

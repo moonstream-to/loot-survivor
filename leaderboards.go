@@ -59,6 +59,7 @@ func Push(leaderboardID, accessToken string, leaderboard []LeaderboardScore, ove
 }
 
 func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
+	names := make(map[string]string)
 	activeOwners := make(map[string]string)
 	scores := make(map[string]uint64)
 	maxLevels := make(map[string]uint64)
@@ -84,9 +85,6 @@ func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			}
 
 			adventurer := event.AdventurerState.AdventurerID
-			if adventurer == "" {
-				fmt.Fprintln(os.Stderr, event)
-			}
 
 			owner := event.AdventurerState.Owner
 			activeOwners[adventurer] = owner
@@ -98,6 +96,22 @@ func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			if event.BeastSpecs.Level > maxLevel {
 				maxLevels[adventurer] = event.BeastSpecs.Level
 			}
+		} else if parsedEvent.Name == EVENT_START_GAME {
+			// Need to figure out a better way of doing this.
+			jsonBytes, marshalErr := json.Marshal(parsedEvent.Event)
+			if marshalErr != nil {
+				return []LeaderboardScore{}, marshalErr
+			}
+			var event StartGameEvent
+			unmarshalErr := json.Unmarshal(jsonBytes, &event)
+			if unmarshalErr != nil {
+				return []LeaderboardScore{}, unmarshalErr
+			}
+
+			adventurer := event.AdventurerState.AdventurerID
+			name := event.AdventurerMeta.Name
+
+			names[adventurer] = fmt.Sprintf("%s - %s", name, adventurer)
 		}
 	}
 
@@ -105,7 +119,7 @@ func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 	i := 0
 	for adventurer, score := range scores {
 		leaderboard[i] = LeaderboardScore{
-			Address: adventurer,
+			Address: names[adventurer],
 			Score:   int(score),
 			PointsData: map[string]interface{}{
 				"max_level":    maxLevels[adventurer],

@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/NethermindEth/juno/core/felt"
 )
@@ -12,7 +15,7 @@ Events from LootSurvivor ABI:
 - [x] game::Game::UpgradesAvailable -- hash: b497e78370ca3376efb8bd098ba912913a571e447c1b2c1ae4de95899d564f
 - [ ] game::Game::DiscoveredHealth -- hash: 0219a5a75d3a985c139001f09646ef572f59a6a0b5f044b163d8118c311e30ba
 - [ ] game::Game::DiscoveredGold -- hash: 15b7d298d615bc8a7f835a151be6f79848d7a28abba637e6608feac27255a2
-- [ ] game::Game::DodgedObstacle -- hash: 033f51c3c3f7cce204e753c2254ff046ea56bfadfa22dee85814cbee84c9a63f
+- [-] game::Game::DodgedObstacle -- hash: 033f51c3c3f7cce204e753c2254ff046ea56bfadfa22dee85814cbee84c9a63f
 - [ ] game::Game::HitByObstacle -- hash: 9ebf5c9567959039f24c635b67d3a000eabf12ba43906df38b9cdbd501317a
 - [ ] game::Game::AmbushedByBeast -- hash: 0317b067327eb6721c6e2e3e299b24a39b58d33771aa154e03a53f8978aa7e68
 - [ ] game::Game::DiscoveredBeast -- hash: 0253a02657b86e566e59683306f5d7b2032b7814d140eeab9b85f8fcca6780fb
@@ -48,25 +51,35 @@ var ErrParsingAdventurer error = errors.New("could not parse adventurer")
 var ErrParsingAdventurerMetadata error = errors.New("could not parse adventurer metadata")
 var ErrParsingStats error = errors.New("could not parse stats")
 var ErrParsingCombatSpec error = errors.New("could not parse combat spec")
+var ErrParsingObstacleDetails error = errors.New("could not parse obstacle details")
+var ErrParsingObstacleEvent error = errors.New("could not parse obstacle event")
 
 type ParsedEvent struct {
 	Name  string      `json:"name"`
 	Event interface{} `json:"event"`
 }
 
+type PartialEvent struct {
+	Name  string          `json:"name"`
+	Event json.RawMessage `json:"event"`
+}
+
 var EVENT_UNKNOWN string = "UNKNOWN"
 var EVENT_START_GAME string = "StartGame"
 var EVENT_UPGRADES_AVAILABLE string = "UpgradesAvailable"
 var EVENT_SLAYED_BEAST string = "SlayedBeast"
+var EVENT_DODGED_OBSTACLE string = "DodgedObstacle"
 
 var StartGameHash string = "023c34c070d9c09046f7f5a319c0d6d482c1f74a5926166f6ff44e5302c4b5b3"
 var UpgradesAvailableHash string = "b497e78370ca3376efb8bd098ba912913a571e447c1b2c1ae4de95899d564f"
 var SlayedBeastHash string = "0335e768ceca00415f9ee04d58d9aebc613c76b43863445e7e33c7138184442e"
+var DodgedObstacleHash string = "033f51c3c3f7cce204e753c2254ff046ea56bfadfa22dee85814cbee84c9a63f"
 
 type Parser struct {
 	StartGameFelt         *felt.Felt
 	UpgradesAvailableFelt *felt.Felt
 	SlayedBeastFelt       *felt.Felt
+	DodgedObstacleFelt    *felt.Felt
 }
 
 func NewParser() (*Parser, error) {
@@ -83,6 +96,11 @@ func NewParser() (*Parser, error) {
 	}
 
 	parser.SlayedBeastFelt, feltErr = FeltFromHexString(SlayedBeastHash)
+	if feltErr != nil {
+		return parser, feltErr
+	}
+
+	parser.DodgedObstacleFelt, feltErr = FeltFromHexString(DodgedObstacleHash)
 	if feltErr != nil {
 		return parser, feltErr
 	}
@@ -110,6 +128,12 @@ func (p *Parser) Parse(event CrawledEvent) (ParsedEvent, error) {
 			return defaultResult, parseErr
 		}
 		return ParsedEvent{Name: EVENT_SLAYED_BEAST, Event: parsedEvent}, nil
+	} else if p.IsDodgedObstacle(event) {
+		parsedEvent, parseErr := p.ParseDodgedObstacle(event)
+		if parseErr != nil {
+			return defaultResult, parseErr
+		}
+		return ParsedEvent{Name: EVENT_DODGED_OBSTACLE, Event: parsedEvent}, nil
 	}
 	return defaultResult, nil
 }
@@ -145,19 +169,11 @@ func (p *Parser) ParseStartGame(event CrawledEvent) (StartGameEvent, error) {
 	}
 	result.AdventurerState = adventurerState
 
-	result.AdventurerMeta = AdventurerMetadata{
-		StartBlock: event.Parameters[41].Uint64(),
-		StartingStats: Stats{
-			Strength:     event.Parameters[42].Uint64(),
-			Dexterity:    event.Parameters[43].Uint64(),
-			Vitality:     event.Parameters[44].Uint64(),
-			Intelligence: event.Parameters[45].Uint64(),
-			Wisdom:       event.Parameters[46].Uint64(),
-			Charisma:     event.Parameters[47].Uint64(),
-			Luck:         event.Parameters[48].Uint64(),
-		},
-		Name: event.Parameters[49].String(),
+	adventurerMetadata, adventurerMetadataErr := ParseAdventurerMetadata(event.Parameters[41:50])
+	if adventurerMetadataErr != nil {
+		return result, adventurerMetadataErr
 	}
+	result.AdventurerMeta = adventurerMetadata
 
 	result.RevealBlock = event.Parameters[50].Uint64()
 
@@ -262,6 +278,38 @@ func (p *Parser) ParseSlayedBeast(event CrawledEvent) (SlayedBeastEvent, error) 
 	return result, nil
 }
 
+// game::Game::DodgedObstacle -- hash: 033f51c3c3f7cce204e753c2254ff046ea56bfadfa22dee85814cbee84c9a63f
+type DodgedObstacleEvent struct {
+	CrawledEvent
+	ObstacleEvent ObstacleEvent `json:"obstacle_event"`
+}
+
+func (p *Parser) IsDodgedObstacle(event CrawledEvent) bool {
+	return p.DodgedObstacleFelt.Cmp(event.PrimaryKey) == 0
+}
+
+func (p *Parser) ParseDodgedObstacle(event CrawledEvent) (DodgedObstacleEvent, error) {
+	result := DodgedObstacleEvent{
+		CrawledEvent: event,
+	}
+
+	if p.DodgedObstacleFelt.Cmp(event.PrimaryKey) != 0 {
+		return result, ErrIncorrectEventKey
+	}
+
+	if len(event.Parameters) != 48 {
+		return result, ErrIncorrectParameters
+	}
+
+	obstacleEvent, parseErr := ParseObstacleEvent(event.Parameters)
+	if parseErr != nil {
+		return result, parseErr
+	}
+	result.ObstacleEvent = obstacleEvent
+
+	return result, nil
+}
+
 // Core data structures used in Loot Survivor events
 type AdventurerState struct {
 	Owner        string     `json:"owner"`
@@ -322,6 +370,21 @@ type SpecialPowers struct {
 	Special1 uint64 `json:"special1"`
 	Special2 uint64 `json:"special2"`
 	Special3 uint64 `json:"special3"`
+}
+
+type ObstacleEvent struct {
+	AdventurerState AdventurerState `json:"adventurer_state"`
+	ObstacleDetails ObstacleDetails `json:"obstacle_details"`
+}
+
+type ObstacleDetails struct {
+	ID                 uint64 `json:"id"`
+	Level              uint64 `json:"level"`
+	DamageTaken        uint64 `json:"damage_taken"`
+	DamageLocation     uint64 `json:"damage_location"`
+	CriticalHit        bool   `json:"critical_hit"`
+	AdventurerXPReward uint64 `json:"adventurer_xp_reward"`
+	ItemXPReward       uint64 `json:"item_xp_reward"`
 }
 
 func Tier(parameter *felt.Felt) string {
@@ -450,10 +513,17 @@ func ParseAdventurerMetadata(parameters []*felt.Felt) (AdventurerMetadata, error
 		return AdventurerMetadata{}, statsErr
 	}
 
+	nameHash := strings.TrimPrefix(parameters[8].String(), "0x")
+	decodedName, decodeErr := hex.DecodeString(nameHash)
+	if decodeErr != nil {
+		return AdventurerMetadata{}, decodeErr
+	}
+	name := string(decodedName)
+
 	return AdventurerMetadata{
 		StartBlock:    parameters[0].Uint64(),
 		StartingStats: stats,
-		Name:          parameters[8].String(),
+		Name:          name,
 	}, nil
 }
 
@@ -485,5 +555,41 @@ func ParseCombatSpec(parameters []*felt.Felt) (CombatSpec, error) {
 			Special2: parameters[4].Uint64(),
 			Special3: parameters[5].Uint64(),
 		},
+	}, nil
+}
+
+func ParseObstacleEvent(parameters []*felt.Felt) (ObstacleEvent, error) {
+	if len(parameters) != 48 {
+		return ObstacleEvent{}, ErrParsingObstacleEvent
+	}
+
+	adventurerState, stateErr := ParseAdventurerState(parameters[0:41])
+	if stateErr != nil {
+		return ObstacleEvent{}, stateErr
+	}
+
+	obstacleDetails, detailsErr := ParseObstacleDetails(parameters[41:48])
+	if detailsErr != nil {
+		return ObstacleEvent{}, detailsErr
+	}
+
+	return ObstacleEvent{
+		AdventurerState: adventurerState,
+		ObstacleDetails: obstacleDetails,
+	}, nil
+}
+
+func ParseObstacleDetails(parameters []*felt.Felt) (ObstacleDetails, error) {
+	if len(parameters) != 7 {
+		return ObstacleDetails{}, ErrParsingObstacleDetails
+	}
+	return ObstacleDetails{
+		ID:                 parameters[0].Uint64(),
+		Level:              parameters[1].Uint64(),
+		DamageTaken:        parameters[2].Uint64(),
+		DamageLocation:     parameters[3].Uint64(),
+		CriticalHit:        parameters[4].Uint64() > 0,
+		AdventurerXPReward: parameters[5].Uint64(),
+		ItemXPReward:       parameters[6].Uint64(),
 	}, nil
 }
