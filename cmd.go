@@ -31,7 +31,8 @@ func CreateRootCommand() *cobra.Command {
 	starknetCmd := CreateStarknetCommand()
 	abiCmd := CreateABICommand()
 	findDeploymentBlockCmd := CreateFindDeploymentCmd()
-	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd, abiCmd, findDeploymentBlockCmd)
+	leaderboardsCmd := CreateLeaderboardsCmd()
+	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd, abiCmd, findDeploymentBlockCmd, leaderboardsCmd)
 
 	// By default, cobra Command objects write to stderr. We have to forcibly set them to output to
 	// stdout.
@@ -165,12 +166,22 @@ func CreateStarknetCommand() *cobra.Command {
 	starkCmd := &cobra.Command{
 		Use:   "stark",
 		Short: "Interact with your Starknet RPC provider",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if providerURL == "" {
+				providerURLFromEnv := os.Getenv("STARKNET_RPC_URL")
+				if providerURLFromEnv == "" {
+					return errors.New("you must provide a provider URL using -p/--provider or set the STARKNET_RPC_URL environment variable")
+				}
+				providerURL = providerURLFromEnv
+			}
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
 	}
 
-	starkCmd.PersistentFlags().StringVarP(&providerURL, "provider", "p", os.Getenv("STARKNET_RPC_URL"), "The URL of your Starknet RPC provider (defaults to value of STARKNET_RPC_URL environment variable)")
+	starkCmd.PersistentFlags().StringVarP(&providerURL, "provider", "p", "", "The URL of your Starknet RPC provider (defaults to value of STARKNET_RPC_URL environment variable)")
 	starkCmd.PersistentFlags().Uint64VarP(&timeout, "timeout", "t", 0, "The timeout for requests to your Starknet RPC provider")
 
 	blockNumberCmd := &cobra.Command{
@@ -296,6 +307,16 @@ func CreateFindDeploymentCmd() *cobra.Command {
 	findDeploymentCmd := &cobra.Command{
 		Use:   "find-deployment-block",
 		Short: "Discover the block number in which a contract was deployed",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if providerURL == "" {
+				providerURLFromEnv := os.Getenv("STARKNET_RPC_URL")
+				if providerURLFromEnv == "" {
+					return errors.New("you must provide a provider URL using -p/--provider or set the STARKNET_RPC_URL environment variable")
+				}
+				providerURL = providerURLFromEnv
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, clientErr := rpc.NewClient(providerURL)
 			if clientErr != nil {
@@ -329,8 +350,100 @@ func CreateFindDeploymentCmd() *cobra.Command {
 		},
 	}
 
-	findDeploymentCmd.Flags().StringVarP(&providerURL, "provider", "p", os.Getenv("STARKNET_RPC_URL"), "The URL of your Starknet RPC provider (defaults to value of STARKNET_RPC_URL environment variable)")
+	findDeploymentCmd.Flags().StringVarP(&providerURL, "provider", "p", "", "The URL of your Starknet RPC provider (defaults to value of STARKNET_RPC_URL environment variable)")
 	findDeploymentCmd.Flags().StringVarP(&contractAddress, "contract", "c", "", "The address of the smart contract to find the deployment block for")
 
 	return findDeploymentCmd
+}
+
+func CreateLeaderboardsCmd() *cobra.Command {
+	var infile, outfile, leaderboardID, accessToken string
+	var push bool
+
+	leaderboardsCmd := &cobra.Command{
+		Use:   "leaderboards",
+		Short: "Generates Loot Survivor leaderboards and can push them to the Moonstream Leaderboards API",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if infile == "" {
+				return errors.New("you must provide an input file using -i/--infile")
+			}
+			if outfile == "" {
+				return errors.New("you must provide an output file using -o/--outfile")
+			}
+			if push {
+				if leaderboardID == "" {
+					leaderboardIDFromEnv := os.Getenv("MOONSTREAM_LEADERBOARD_ID")
+					if leaderboardIDFromEnv == "" {
+						return errors.New("when pushing, you must provide a leaderboard ID using -l/--leaderboard-id or set the MOONSTREAM_LEADERBOARD_ID environment variable")
+					}
+					leaderboardID = leaderboardIDFromEnv
+				}
+				if accessToken == "" {
+					accessTokenFromEnv := os.Getenv("MOONSTREAM_ACCESS_TOKEN")
+					if accessTokenFromEnv == "" {
+						return errors.New("when pushing, you must provide an access token using -t/--access-token or set the MOONSTREAM_ACCESS_TOKEN environment variable")
+					}
+					accessToken = accessTokenFromEnv
+				}
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
+		},
+	}
+	leaderboardsCmd.PersistentFlags().StringVarP(&infile, "infile", "i", "", "File containing crawled events from which to build the leaderboard (as produced by the \"loot-survivor stark events\" command)")
+	leaderboardsCmd.PersistentFlags().StringVarP(&outfile, "outfile", "o", "", "File to write leaderboard to")
+	leaderboardsCmd.PersistentFlags().BoolVar(&push, "push", false, "Set this option to pus the leaderboard to the Moonstream Leaderboard API")
+	leaderboardsCmd.PersistentFlags().StringVarP(&leaderboardID, "leaderboard-id", "l", "", "Leaderboard ID for the Moonstream Leaderboard (look up or generate at https://moonstream.to, defaults to value of MOONSTREAM_LEADERBOARD_ID environment variable)")
+	leaderboardsCmd.PersistentFlags().StringVarP(&accessToken, "access-token", "t", "", "Access token for Moonstream API (get from https://moonstream.to, defaults to value of MOONSTREAM_ACCESS_TOKEN environment variable)")
+
+	beastSlayersCmd := &cobra.Command{
+		Use:   "beast-slayers",
+		Short: "Leaderboard of beast slayers",
+		Long: `Leaderboard of beast slayers
+
+NOTE: This is a leaderboard of adventurers, not their owners.
+
+The primary score on this leaderboard is the number of beasts slayed by each adventurer.
+
+The leaderboard tracks the maximum level of beast slain by each adventurer as a secondary score.
+
+Finally, the leaderboard also lists the active owner for each adventurer, defined as the account that
+last used the adventurer in a game session.
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ifp, infileErr := os.Open(infile)
+			if infileErr != nil {
+				return infileErr
+			}
+			defer ifp.Close()
+
+			leaderboard, leaderboardErr := BeastSlayersLeaderboard(ifp)
+			if leaderboardErr != nil {
+				return leaderboardErr
+			}
+
+			ofp, outfileErr := os.Create(outfile)
+			if outfileErr != nil {
+				return outfileErr
+			}
+			defer ofp.Close()
+
+			outputEncoder := json.NewEncoder(ofp)
+			outputEncoder.Encode(leaderboard)
+
+			if push {
+				pushErr := Push(leaderboardID, accessToken, leaderboard, true)
+				if pushErr != nil {
+					return pushErr
+				}
+			}
+			return nil
+		},
+	}
+
+	leaderboardsCmd.AddCommand(beastSlayersCmd)
+
+	return leaderboardsCmd
 }

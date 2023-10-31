@@ -1,9 +1,9 @@
 .PHONY: clean build
 
 clean:
-	rm -f ./survivor ./loot-survivor
+	rm -f ./loot-survivor
 
-survivor:
-	go build -o survivor ./...
+loot-survivor:
+	go build ./...
 
-build: clean survivor
+build: clean loot-survivor
