@@ -26,3 +26,6 @@ survivor
 
 # secrets
 .secrets/
+
+# data
+data/
