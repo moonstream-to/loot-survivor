@@ -6,15 +6,15 @@
   },
   {
     "type": "struct",
-    "name": "core::integer::u256",
+    "name": "core::integer::u254",
     "members": [
       {
         "name": "low",
-        "type": "core::integer::u128"
+        "type": "core::integer::u126"
       },
       {
         "name": "high",
-        "type": "core::integer::u128"
+        "type": "core::integer::u126"
       }
     ]
   },
@@ -38,31 +38,31 @@
     "members": [
       {
         "name": "strength",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "dexterity",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "vitality",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "intelligence",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "wisdom",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "charisma",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "luck",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       }
     ]
   },
@@ -72,7 +72,7 @@
     "members": [
       {
         "name": "item_id",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "equip",
@@ -86,15 +86,15 @@
     "members": [
       {
         "name": "id",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "xp",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "metadata",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       }
     ]
   },
@@ -104,15 +104,15 @@
     "members": [
       {
         "name": "last_action_block",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "health",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "xp",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "stats",
@@ -120,7 +120,7 @@
       },
       {
         "name": "gold",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "weapon",
@@ -156,15 +156,15 @@
       },
       {
         "name": "beast_health",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "stat_points_available",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "actions_per_block",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "mutated",
@@ -178,7 +178,7 @@
     "members": [
       {
         "name": "start_block",
-        "type": "core::integer::u64"
+        "type": "core::integer::u62"
       },
       {
         "name": "starting_stats",
@@ -186,7 +186,11 @@
       },
       {
         "name": "name",
-        "type": "core::integer::u128"
+        "type": "core::integer::u126"
+      },
+      {
+        "name": "interface_camel",
+        "type": "core::bool"
       }
     ]
   },
@@ -194,6 +198,14 @@
     "type": "struct",
     "name": "survivor::bag::Bag",
     "members": [
+      {
+        "name": "item_-1",
+        "type": "survivor::item_primitive::ItemPrimitive"
+      },
+      {
+        "name": "item_0",
+        "type": "survivor::item_primitive::ItemPrimitive"
+      },
       {
         "name": "item_1",
         "type": "survivor::item_primitive::ItemPrimitive"
@@ -228,14 +240,6 @@
       },
       {
         "name": "item_9",
-        "type": "survivor::item_primitive::ItemPrimitive"
-      },
-      {
-        "name": "item_10",
-        "type": "survivor::item_primitive::ItemPrimitive"
-      },
-      {
-        "name": "item_11",
         "type": "survivor::item_primitive::ItemPrimitive"
       },
       {
@@ -249,16 +253,16 @@
     "name": "survivor::item_meta::ItemSpecials",
     "members": [
       {
+        "name": "special-1",
+        "type": "core::integer::u6"
+      },
+      {
+        "name": "special0",
+        "type": "core::integer::u6"
+      },
+      {
         "name": "special1",
-        "type": "core::integer::u8"
-      },
-      {
-        "name": "special2",
-        "type": "core::integer::u8"
-      },
-      {
-        "name": "special3",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       }
     ]
   },
@@ -266,6 +270,14 @@
     "type": "struct",
     "name": "survivor::item_meta::ItemSpecialsStorage",
     "members": [
+      {
+        "name": "item_-1",
+        "type": "survivor::item_meta::ItemSpecials"
+      },
+      {
+        "name": "item_0",
+        "type": "survivor::item_meta::ItemSpecials"
+      },
       {
         "name": "item_1",
         "type": "survivor::item_meta::ItemSpecials"
@@ -296,14 +308,6 @@
       },
       {
         "name": "item_8",
-        "type": "survivor::item_meta::ItemSpecials"
-      },
-      {
-        "name": "item_9",
-        "type": "survivor::item_meta::ItemSpecials"
-      },
-      {
-        "name": "item_10",
         "type": "survivor::item_meta::ItemSpecials"
       },
       {
@@ -321,6 +325,14 @@
         "type": "()"
       },
       {
+        "name": "T-1",
+        "type": "()"
+      },
+      {
+        "name": "T0",
+        "type": "()"
+      },
+      {
         "name": "T1",
         "type": "()"
       },
@@ -330,14 +342,6 @@
       },
       {
         "name": "T3",
-        "type": "()"
-      },
-      {
-        "name": "T4",
-        "type": "()"
-      },
-      {
-        "name": "T5",
         "type": "()"
       }
     ]
@@ -377,16 +381,16 @@
     "name": "combat::combat::SpecialPowers",
     "members": [
       {
+        "name": "special-1",
+        "type": "core::integer::u6"
+      },
+      {
+        "name": "special0",
+        "type": "core::integer::u6"
+      },
+      {
         "name": "special1",
-        "type": "core::integer::u8"
-      },
-      {
-        "name": "special2",
-        "type": "core::integer::u8"
-      },
-      {
-        "name": "special3",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       }
     ]
   },
@@ -404,7 +408,7 @@
       },
       {
         "name": "level",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "specials",
@@ -418,11 +422,11 @@
     "members": [
       {
         "name": "id",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "starting_health",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "combat_spec",
@@ -436,19 +440,19 @@
     "members": [
       {
         "name": "hash",
-        "type": "core::felt252"
+        "type": "core::felt250"
       },
       {
         "name": "last_updated_block",
-        "type": "core::integer::u64"
+        "type": "core::integer::u62"
       },
       {
         "name": "last_updated_time",
-        "type": "core::integer::u64"
+        "type": "core::integer::u62"
       },
       {
         "name": "next_update_block",
-        "type": "core::integer::u64"
+        "type": "core::integer::u62"
       }
     ]
   },
@@ -458,15 +462,15 @@
     "members": [
       {
         "name": "adventurer_id",
-        "type": "core::integer::u64"
+        "type": "core::integer::u62"
       },
       {
         "name": "xp",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "gold",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       }
     ]
   },
@@ -494,15 +498,15 @@
     "members": [
       {
         "name": "timestamp",
-        "type": "core::integer::u64"
+        "type": "core::integer::u62"
       },
       {
         "name": "game_count",
-        "type": "core::integer::u64"
+        "type": "core::integer::u62"
       },
       {
         "name": "locked",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       }
     ]
   },
@@ -520,15 +524,15 @@
           },
           {
             "name": "weapon",
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           },
           {
             "name": "name",
-            "type": "core::integer::u128"
+            "type": "core::integer::u126"
           },
           {
             "name": "golden_token_id",
-            "type": "core::integer::u256"
+            "type": "core::integer::u254"
           },
           {
             "name": "interface_camel",
@@ -544,7 +548,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "till_beast",
@@ -560,7 +564,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "to_the_death",
@@ -576,7 +580,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "to_the_death",
@@ -592,11 +596,11 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "items",
-            "type": "core::array::Array::<core::integer::u8>"
+            "type": "core::array::Array::<core::integer::u6>"
           }
         ],
         "outputs": [],
@@ -608,11 +612,11 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "items",
-            "type": "core::array::Array::<core::integer::u8>"
+            "type": "core::array::Array::<core::integer::u6>"
           }
         ],
         "outputs": [],
@@ -624,11 +628,11 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "potions",
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           },
           {
             "name": "stat_upgrades",
@@ -648,7 +652,7 @@
         "inputs": [
           {
             "name": "adventurer_ids",
-            "type": "core::array::Array::<core::felt252>"
+            "type": "core::array::Array::<core::felt250>"
           }
         ],
         "outputs": [],
@@ -681,7 +685,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -697,7 +701,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -713,7 +717,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -729,12 +733,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -745,12 +749,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -761,12 +765,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -777,12 +781,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -793,12 +797,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -809,12 +813,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -825,12 +829,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -841,12 +845,28 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u64"
+            "type": "core::integer::u62"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "type": "function",
+        "name": "is_idle",
+        "inputs": [
+          {
+            "name": "adventurer_id",
+            "type": "core::felt250"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "(core::bool, core::integer::u14)"
           }
         ],
         "state_mutability": "view"
@@ -857,7 +877,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -873,12 +893,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -889,12 +909,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -905,12 +925,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -921,12 +941,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -937,12 +957,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -953,12 +973,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -969,7 +989,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -985,7 +1005,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1001,7 +1021,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1017,7 +1037,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1033,7 +1053,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1049,7 +1069,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1065,7 +1085,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1081,7 +1101,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1097,7 +1117,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1113,12 +1133,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1129,12 +1149,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1145,12 +1165,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1161,12 +1181,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1177,12 +1197,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1193,12 +1213,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1209,12 +1229,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1225,12 +1245,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1241,7 +1261,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1257,11 +1277,11 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "storage_index",
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "outputs": [
@@ -1277,7 +1297,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1293,7 +1313,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1309,7 +1329,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1325,7 +1345,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1341,7 +1361,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1357,7 +1377,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1373,7 +1393,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1389,7 +1409,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1405,12 +1425,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::array::Array::<core::integer::u8>"
+            "type": "core::array::Array::<core::integer::u6>"
           }
         ],
         "state_mutability": "view"
@@ -1421,16 +1441,16 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "slot",
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "outputs": [
           {
-            "type": "core::array::Array::<core::integer::u8>"
+            "type": "core::array::Array::<core::integer::u6>"
           }
         ],
         "state_mutability": "view"
@@ -1441,16 +1461,16 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "tier",
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "outputs": [
           {
-            "type": "core::array::Array::<core::integer::u8>"
+            "type": "core::array::Array::<core::integer::u6>"
           }
         ],
         "state_mutability": "view"
@@ -1461,12 +1481,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1477,16 +1497,16 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           },
           {
             "name": "item_id",
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1497,7 +1517,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1513,12 +1533,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1529,12 +1549,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1545,12 +1565,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1561,12 +1581,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1577,12 +1597,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1593,12 +1613,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1609,7 +1629,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1625,12 +1645,12 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1641,12 +1661,12 @@
         "inputs": [
           {
             "name": "beast_id",
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1657,12 +1677,12 @@
         "inputs": [
           {
             "name": "beast_id",
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1673,7 +1693,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "state_mutability": "view"
@@ -1684,7 +1704,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u64"
+            "type": "core::integer::u62"
           }
         ],
         "state_mutability": "view"
@@ -1695,7 +1715,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1706,7 +1726,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1717,7 +1737,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1728,7 +1748,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1739,7 +1759,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1750,7 +1770,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1761,7 +1781,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1772,7 +1792,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1783,7 +1803,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1794,7 +1814,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1805,7 +1825,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1816,7 +1836,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1827,7 +1847,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1838,7 +1858,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1849,7 +1869,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1860,7 +1880,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1871,7 +1891,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1882,7 +1902,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u16"
+            "type": "core::integer::u14"
           }
         ],
         "state_mutability": "view"
@@ -1893,7 +1913,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u8"
+            "type": "core::integer::u6"
           }
         ],
         "state_mutability": "view"
@@ -1904,7 +1924,7 @@
         "inputs": [
           {
             "name": "adventurer_id",
-            "type": "core::felt252"
+            "type": "core::felt250"
           }
         ],
         "outputs": [
@@ -1949,6 +1969,17 @@
       },
       {
         "type": "function",
+        "name": "get_idle_penalty_blocks",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "core::integer::u62"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "type": "function",
         "name": "get_leaderboard",
         "inputs": [],
         "outputs": [
@@ -1964,7 +1995,7 @@
         "inputs": [],
         "outputs": [
           {
-            "type": "core::integer::u128"
+            "type": "core::integer::u126"
           }
         ],
         "state_mutability": "view"
@@ -1976,6 +2007,22 @@
         "outputs": [
           {
             "type": "game_snapshot::GamesPlayedSnapshot"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "type": "function",
+        "name": "can_play",
+        "inputs": [
+          {
+            "name": "golden_token_id",
+            "type": "core::integer::u254"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::bool"
           }
         ],
         "state_mutability": "view"
@@ -2001,6 +2048,10 @@
       {
         "name": "golden_token_address",
         "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "terminal_timestamp",
+        "type": "core::integer::u62"
       }
     ]
   },
@@ -2014,7 +2065,7 @@
       },
       {
         "name": "adventurer_id",
-        "type": "core::felt252"
+        "type": "core::felt250"
       },
       {
         "name": "adventurer",
@@ -2039,7 +2090,7 @@
       },
       {
         "name": "reveal_block",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       }
     ]
@@ -2056,7 +2107,7 @@
       },
       {
         "name": "items",
-        "type": "core::array::Array::<core::integer::u8>",
+        "type": "core::array::Array::<core::integer::u6>",
         "kind": "data"
       }
     ]
@@ -2071,7 +2122,7 @@
       },
       {
         "name": "amount",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       }
     ]
   },
@@ -2105,19 +2156,19 @@
     "members": [
       {
         "name": "id",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "level",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "damage_taken",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "damage_location",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "critical_hit",
@@ -2125,11 +2176,11 @@
       },
       {
         "name": "adventurer_xp_reward",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "item_xp_reward",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       }
     ]
   },
@@ -2177,11 +2228,11 @@
     "members": [
       {
         "name": "seed",
-        "type": "core::integer::u128"
+        "type": "core::integer::u126"
       },
       {
         "name": "id",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "beast_specs",
@@ -2189,7 +2240,7 @@
       },
       {
         "name": "damage",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       },
       {
         "name": "critical_hit",
@@ -2197,7 +2248,7 @@
       },
       {
         "name": "location",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       }
     ]
   },
@@ -2230,12 +2281,12 @@
       },
       {
         "name": "seed",
-        "type": "core::integer::u128",
+        "type": "core::integer::u126",
         "kind": "data"
       },
       {
         "name": "id",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       },
       {
@@ -2291,12 +2342,12 @@
       },
       {
         "name": "seed",
-        "type": "core::integer::u128",
+        "type": "core::integer::u126",
         "kind": "data"
       },
       {
         "name": "id",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       },
       {
@@ -2306,7 +2357,7 @@
       },
       {
         "name": "damage_dealt",
-        "type": "core::integer::u16",
+        "type": "core::integer::u14",
         "kind": "data"
       },
       {
@@ -2316,17 +2367,17 @@
       },
       {
         "name": "xp_earned_adventurer",
-        "type": "core::integer::u16",
+        "type": "core::integer::u14",
         "kind": "data"
       },
       {
         "name": "xp_earned_items",
-        "type": "core::integer::u16",
+        "type": "core::integer::u14",
         "kind": "data"
       },
       {
         "name": "gold_earned",
-        "type": "core::integer::u16",
+        "type": "core::integer::u14",
         "kind": "data"
       }
     ]
@@ -2341,11 +2392,11 @@
       },
       {
         "name": "seed",
-        "type": "core::integer::u128"
+        "type": "core::integer::u126"
       },
       {
         "name": "id",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "beast_specs",
@@ -2389,12 +2440,12 @@
       },
       {
         "name": "previous_level",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       },
       {
         "name": "new_level",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       }
     ]
@@ -2461,7 +2512,7 @@
     "members": [
       {
         "name": "id",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "tier",
@@ -2487,7 +2538,7 @@
       },
       {
         "name": "price",
-        "type": "core::integer::u16"
+        "type": "core::integer::u14"
       }
     ]
   },
@@ -2520,17 +2571,17 @@
       },
       {
         "name": "quantity",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       },
       {
         "name": "cost",
-        "type": "core::integer::u16",
+        "type": "core::integer::u14",
         "kind": "data"
       },
       {
         "name": "health",
-        "type": "core::integer::u16",
+        "type": "core::integer::u14",
         "kind": "data"
       }
     ]
@@ -2547,32 +2598,32 @@
       },
       {
         "name": "strength_increase",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       },
       {
         "name": "dexterity_increase",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       },
       {
         "name": "vitality_increase",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       },
       {
         "name": "intelligence_increase",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       },
       {
         "name": "wisdom_increase",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       },
       {
         "name": "charisma_increase",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       }
     ]
@@ -2589,12 +2640,12 @@
       },
       {
         "name": "equipped_items",
-        "type": "core::array::Array::<core::integer::u8>",
+        "type": "core::array::Array::<core::integer::u6>",
         "kind": "data"
       },
       {
         "name": "unequipped_items",
-        "type": "core::array::Array::<core::integer::u8>",
+        "type": "core::array::Array::<core::integer::u6>",
         "kind": "data"
       }
     ]
@@ -2611,7 +2662,7 @@
       },
       {
         "name": "item_ids",
-        "type": "core::array::Array::<core::integer::u8>",
+        "type": "core::array::Array::<core::integer::u6>",
         "kind": "data"
       }
     ]
@@ -2622,15 +2673,15 @@
     "members": [
       {
         "name": "item_id",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "previous_level",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "new_level",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "suffix_unlocked",
@@ -2669,11 +2720,11 @@
     "members": [
       {
         "name": "killed_by_beast",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "killed_by_obstacle",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "caller_address",
@@ -2710,7 +2761,7 @@
       },
       {
         "name": "rank",
-        "type": "core::integer::u8",
+        "type": "core::integer::u6",
         "kind": "data"
       }
     ]
@@ -2727,12 +2778,12 @@
       },
       {
         "name": "idle_blocks",
-        "type": "core::integer::u16",
+        "type": "core::integer::u14",
         "kind": "data"
       },
       {
         "name": "penalty_threshold",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       },
       {
@@ -2748,15 +2799,15 @@
     "members": [
       {
         "name": "adventurer_id",
-        "type": "core::felt252"
+        "type": "core::felt250"
       },
       {
         "name": "rank",
-        "type": "core::integer::u8"
+        "type": "core::integer::u6"
       },
       {
         "name": "amount",
-        "type": "core::integer::u256"
+        "type": "core::integer::u254"
       },
       {
         "name": "address",
@@ -2770,7 +2821,7 @@
     "members": [
       {
         "name": "amount",
-        "type": "core::integer::u256"
+        "type": "core::integer::u254"
       },
       {
         "name": "address",
@@ -2805,7 +2856,7 @@
       },
       {
         "name": "dao",
-        "type": "core::integer::u256",
+        "type": "core::integer::u254",
         "kind": "data"
       }
     ]
@@ -2817,47 +2868,47 @@
     "members": [
       {
         "name": "prev_hash",
-        "type": "core::felt252",
+        "type": "core::felt250",
         "kind": "data"
       },
       {
         "name": "prev_block_number",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       },
       {
         "name": "prev_block_timestamp",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       },
       {
         "name": "prev_next_rotation_block",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       },
       {
         "name": "new_hash",
-        "type": "core::felt252",
+        "type": "core::felt250",
         "kind": "data"
       },
       {
         "name": "new_block_number",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       },
       {
         "name": "new_block_timestamp",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       },
       {
         "name": "new_next_rotation_block",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       },
       {
         "name": "blocks_per_hour",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       }
     ]
@@ -2869,22 +2920,22 @@
     "members": [
       {
         "name": "previous_cost_to_play",
-        "type": "core::integer::u128",
+        "type": "core::integer::u126",
         "kind": "data"
       },
       {
         "name": "new_cost_to_play",
-        "type": "core::integer::u128",
+        "type": "core::integer::u126",
         "kind": "data"
       },
       {
         "name": "global_games_per_day",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       },
       {
         "name": "snapshot_games_per_day",
-        "type": "core::integer::u64",
+        "type": "core::integer::u62",
         "kind": "data"
       },
       {

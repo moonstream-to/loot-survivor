@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/hex"
 	"encoding/json"
-	"errors"
-	"strings"
+	"fmt"
 
 	"github.com/NethermindEth/juno/core/felt"
+	"github.com/moonstream-to/loot-survivor/bindings"
 )
 
 /*
@@ -44,15 +43,7 @@ Events from Beasts ABI:
 - [ ] LootSurvivorBeasts::beasts::Beasts::ApprovalForAll -- hash: 06ad9ed7b6318f1bcffefe19df9aeb40d22c36bed567e1925a5ccde0536edd
 */
 
-var ErrIncorrectEventKey error = errors.New("incorrect event key")
-var ErrIncorrectParameters error = errors.New("incorrect parameters")
-var ErrParsingAdventurerState error = errors.New("could not parse adventurer state")
-var ErrParsingAdventurer error = errors.New("could not parse adventurer")
-var ErrParsingAdventurerMetadata error = errors.New("could not parse adventurer metadata")
-var ErrParsingStats error = errors.New("could not parse stats")
-var ErrParsingCombatSpec error = errors.New("could not parse combat spec")
-var ErrParsingObstacleDetails error = errors.New("could not parse obstacle details")
-var ErrParsingObstacleEvent error = errors.New("could not parse obstacle event")
+var EVENT_UNKNOWN = "UNKNOWN"
 
 type ParsedEvent struct {
 	Name  string      `json:"name"`
@@ -64,43 +55,38 @@ type PartialEvent struct {
 	Event json.RawMessage `json:"event"`
 }
 
-var EVENT_UNKNOWN string = "UNKNOWN"
-var EVENT_START_GAME string = "StartGame"
-var EVENT_UPGRADES_AVAILABLE string = "UpgradesAvailable"
-var EVENT_SLAYED_BEAST string = "SlayedBeast"
-var EVENT_DODGED_OBSTACLE string = "DodgedObstacle"
-
-var StartGameHash string = "023c34c070d9c09046f7f5a319c0d6d482c1f74a5926166f6ff44e5302c4b5b3"
-var UpgradesAvailableHash string = "b497e78370ca3376efb8bd098ba912913a571e447c1b2c1ae4de95899d564f"
-var SlayedBeastHash string = "0335e768ceca00415f9ee04d58d9aebc613c76b43863445e7e33c7138184442e"
-var DodgedObstacleHash string = "033f51c3c3f7cce204e753c2254ff046ea56bfadfa22dee85814cbee84c9a63f"
-
-type Parser struct {
-	StartGameFelt         *felt.Felt
-	UpgradesAvailableFelt *felt.Felt
-	SlayedBeastFelt       *felt.Felt
-	DodgedObstacleFelt    *felt.Felt
+type LootSurvivorEventParser struct {
+	StartGameFelt          *felt.Felt
+	UpgradesAvailableFelt  *felt.Felt
+	SlayedBeastFelt        *felt.Felt
+	DodgedObstacleFelt     *felt.Felt
+	RewardDistributionFelt *felt.Felt
 }
 
-func NewParser() (*Parser, error) {
+func NewLootSurvivorParser() (*LootSurvivorEventParser, error) {
 	var feltErr error
-	parser := &Parser{}
-	parser.StartGameFelt, feltErr = FeltFromHexString(StartGameHash)
+	parser := &LootSurvivorEventParser{}
+	parser.StartGameFelt, feltErr = FeltFromHexString(bindings.Hash_Game_Game_StartGame)
 	if feltErr != nil {
 		return parser, feltErr
 	}
 
-	parser.UpgradesAvailableFelt, feltErr = FeltFromHexString(UpgradesAvailableHash)
+	parser.UpgradesAvailableFelt, feltErr = FeltFromHexString(bindings.Hash_Game_Game_UpgradesAvailable)
 	if feltErr != nil {
 		return parser, feltErr
 	}
 
-	parser.SlayedBeastFelt, feltErr = FeltFromHexString(SlayedBeastHash)
+	parser.SlayedBeastFelt, feltErr = FeltFromHexString(bindings.Hash_Game_Game_SlayedBeast)
 	if feltErr != nil {
 		return parser, feltErr
 	}
 
-	parser.DodgedObstacleFelt, feltErr = FeltFromHexString(DodgedObstacleHash)
+	parser.DodgedObstacleFelt, feltErr = FeltFromHexString(bindings.Hash_Game_Game_DodgedObstacle)
+	if feltErr != nil {
+		return parser, feltErr
+	}
+
+	parser.RewardDistributionFelt, feltErr = FeltFromHexString(bindings.Hash_Game_Game_RewardDistribution)
 	if feltErr != nil {
 		return parser, feltErr
 	}
@@ -108,488 +94,39 @@ func NewParser() (*Parser, error) {
 	return parser, nil
 }
 
-func (p *Parser) Parse(event CrawledEvent) (ParsedEvent, error) {
+func (p *LootSurvivorEventParser) Parse(event CrawledEvent) (ParsedEvent, error) {
 	defaultResult := ParsedEvent{Name: EVENT_UNKNOWN, Event: event}
-	if p.IsStartGame(event) {
-		parsedEvent, parseErr := p.ParseStartGame(event)
+	if p.StartGameFelt.Cmp(event.PrimaryKey) == 0 {
+		parsedEvent, _, parseErr := bindings.ParseGame_Game_StartGame(event.Parameters)
+		if parseErr != nil {
+			fmt.Println(parseErr.Error())
+			return defaultResult, parseErr
+		}
+		return ParsedEvent{Name: bindings.Event_Game_Game_StartGame, Event: parsedEvent}, nil
+	} else if p.UpgradesAvailableFelt.Cmp(event.PrimaryKey) == 0 {
+		parsedEvent, _, parseErr := bindings.ParseGame_Game_UpgradesAvailable(event.Parameters)
 		if parseErr != nil {
 			return defaultResult, parseErr
 		}
-		return ParsedEvent{Name: EVENT_START_GAME, Event: parsedEvent}, nil
-	} else if p.IsUpgradesAvailable(event) {
-		parsedEvent, parseErr := p.ParseUpgradesAvailable(event)
+		return ParsedEvent{Name: bindings.Event_Game_Game_UpgradesAvailable, Event: parsedEvent}, nil
+	} else if p.SlayedBeastFelt.Cmp(event.PrimaryKey) == 0 {
+		parsedEvent, _, parseErr := bindings.ParseGame_Game_SlayedBeast(event.Parameters)
 		if parseErr != nil {
 			return defaultResult, parseErr
 		}
-		return ParsedEvent{Name: EVENT_UPGRADES_AVAILABLE, Event: parsedEvent}, nil
-	} else if p.IsSlayedBeast(event) {
-		parsedEvent, parseErr := p.ParseSlayedBeast(event)
+		return ParsedEvent{Name: bindings.Event_Game_Game_SlayedBeast, Event: parsedEvent}, nil
+	} else if p.DodgedObstacleFelt.Cmp(event.PrimaryKey) == 0 {
+		parsedEvent, _, parseErr := bindings.ParseGame_Game_DodgedObstacle(event.Parameters)
 		if parseErr != nil {
 			return defaultResult, parseErr
 		}
-		return ParsedEvent{Name: EVENT_SLAYED_BEAST, Event: parsedEvent}, nil
-	} else if p.IsDodgedObstacle(event) {
-		parsedEvent, parseErr := p.ParseDodgedObstacle(event)
+		return ParsedEvent{Name: bindings.Event_Game_Game_DodgedObstacle, Event: parsedEvent}, nil
+	} else if p.RewardDistributionFelt.Cmp(event.PrimaryKey) == 0 {
+		parsedEvent, _, parseErr := bindings.ParseGame_Game_RewardDistribution(event.Parameters)
 		if parseErr != nil {
 			return defaultResult, parseErr
 		}
-		return ParsedEvent{Name: EVENT_DODGED_OBSTACLE, Event: parsedEvent}, nil
+		return ParsedEvent{Name: bindings.Event_Game_Game_RewardDistribution, Event: parsedEvent}, nil
 	}
 	return defaultResult, nil
-}
-
-// game::Game::StartGame -- hash: 023c34c070d9c09046f7f5a319c0d6d482c1f74a5926166f6ff44e5302c4b5b3
-type StartGameEvent struct {
-	CrawledEvent
-	AdventurerState AdventurerState    `json:"adventurer_state"`
-	AdventurerMeta  AdventurerMetadata `json:"adventurer_meta"`
-	RevealBlock     uint64             `json:"reveal_block"`
-}
-
-func (p *Parser) IsStartGame(event CrawledEvent) bool {
-	return p.StartGameFelt.Cmp(event.PrimaryKey) == 0
-}
-
-func (p *Parser) ParseStartGame(event CrawledEvent) (StartGameEvent, error) {
-	result := StartGameEvent{
-		CrawledEvent: event,
-	}
-
-	if p.StartGameFelt.Cmp(event.PrimaryKey) != 0 {
-		return result, ErrIncorrectEventKey
-	}
-
-	if len(event.Parameters) != 51 {
-		return result, ErrIncorrectParameters
-	}
-
-	adventurerState, adventurerStateErr := ParseAdventurerState(event.Parameters[0:41])
-	if adventurerStateErr != nil {
-		return result, adventurerStateErr
-	}
-	result.AdventurerState = adventurerState
-
-	adventurerMetadata, adventurerMetadataErr := ParseAdventurerMetadata(event.Parameters[41:50])
-	if adventurerMetadataErr != nil {
-		return result, adventurerMetadataErr
-	}
-	result.AdventurerMeta = adventurerMetadata
-
-	result.RevealBlock = event.Parameters[50].Uint64()
-
-	return result, nil
-}
-
-// game::Game::UpgradesAvailable -- hash: b497e78370ca3376efb8bd098ba912913a571e447c1b2c1ae4de95899d564f
-type UpgradesAvailableEvent struct {
-	CrawledEvent
-	AdventurerState AdventurerState `json:"adventurer_state"`
-	Items           []uint64        `json:"items"`
-}
-
-func (p *Parser) IsUpgradesAvailable(event CrawledEvent) bool {
-	return p.UpgradesAvailableFelt.Cmp(event.PrimaryKey) == 0
-}
-
-func (p *Parser) ParseUpgradesAvailable(event CrawledEvent) (UpgradesAvailableEvent, error) {
-	result := UpgradesAvailableEvent{
-		CrawledEvent: event,
-	}
-
-	if p.UpgradesAvailableFelt.Cmp(event.PrimaryKey) != 0 {
-		return result, ErrIncorrectEventKey
-	}
-
-	// First 63 parameters are AdventurerState
-	if len(event.Parameters) < 63 {
-		return result, ErrIncorrectParameters
-	}
-
-	adventurerState, adventurerStateErr := ParseAdventurerState(event.Parameters[0:63])
-	if adventurerStateErr != nil {
-		return result, nil
-	}
-	result.AdventurerState = adventurerState
-
-	items := []uint64{}
-	if len(event.Parameters) > 63 {
-		items = make([]uint64, len(event.Parameters)-63)
-		for i, _ := range items {
-			items[i] = event.Parameters[i+63].Uint64()
-		}
-	}
-	result.Items = items
-
-	return result, nil
-}
-
-// game::Game::SlayedBeast -- hash: 0335e768ceca00415f9ee04d58d9aebc613c76b43863445e7e33c7138184442e
-type SlayedBeastEvent struct {
-	CrawledEvent
-	AdventurerState    AdventurerState `json:"adventurer_state"`
-	Seed               string          `json:"seed"`
-	ID                 uint64          `json:"id"`
-	BeastSpecs         CombatSpec      `json:"beast_specs"`
-	DamageDealt        uint64          `json:"damage_dealt"`
-	CriticalHit        bool            `json:"critical_hit"`
-	XPEarnedAdventurer uint64          `json:"xp_earned_adventurer"`
-	XPEarnedItems      uint64          `json:"xp_earned_items"`
-	GoldEarned         uint64          `json:"gold_earned"`
-}
-
-func (p *Parser) IsSlayedBeast(event CrawledEvent) bool {
-	return p.SlayedBeastFelt.Cmp(event.PrimaryKey) == 0
-}
-
-func (p *Parser) ParseSlayedBeast(event CrawledEvent) (SlayedBeastEvent, error) {
-	result := SlayedBeastEvent{
-		CrawledEvent: event,
-	}
-
-	if p.SlayedBeastFelt.Cmp(event.PrimaryKey) != 0 {
-		return result, ErrIncorrectEventKey
-	}
-
-	if len(event.Parameters) != 54 {
-		return result, ErrIncorrectParameters
-	}
-
-	adventurerState, adventurerStateErr := ParseAdventurerState(event.Parameters[:41])
-	if adventurerStateErr != nil {
-		return result, adventurerStateErr
-	}
-	result.AdventurerState = adventurerState
-
-	result.Seed = event.Parameters[41].String()
-	result.ID = event.Parameters[42].Uint64()
-
-	beastSpecs, beastSpecsErr := ParseCombatSpec(event.Parameters[43:49])
-	if beastSpecsErr != nil {
-		return result, beastSpecsErr
-	}
-	result.BeastSpecs = beastSpecs
-
-	result.DamageDealt = event.Parameters[49].Uint64()
-	result.CriticalHit = event.Parameters[50].Uint64() > 0
-	result.XPEarnedAdventurer = event.Parameters[51].Uint64()
-	result.XPEarnedItems = event.Parameters[52].Uint64()
-	result.GoldEarned = event.Parameters[53].Uint64()
-
-	return result, nil
-}
-
-// game::Game::DodgedObstacle -- hash: 033f51c3c3f7cce204e753c2254ff046ea56bfadfa22dee85814cbee84c9a63f
-type DodgedObstacleEvent struct {
-	CrawledEvent
-	ObstacleEvent ObstacleEvent `json:"obstacle_event"`
-}
-
-func (p *Parser) IsDodgedObstacle(event CrawledEvent) bool {
-	return p.DodgedObstacleFelt.Cmp(event.PrimaryKey) == 0
-}
-
-func (p *Parser) ParseDodgedObstacle(event CrawledEvent) (DodgedObstacleEvent, error) {
-	result := DodgedObstacleEvent{
-		CrawledEvent: event,
-	}
-
-	if p.DodgedObstacleFelt.Cmp(event.PrimaryKey) != 0 {
-		return result, ErrIncorrectEventKey
-	}
-
-	if len(event.Parameters) != 48 {
-		return result, ErrIncorrectParameters
-	}
-
-	obstacleEvent, parseErr := ParseObstacleEvent(event.Parameters)
-	if parseErr != nil {
-		return result, parseErr
-	}
-	result.ObstacleEvent = obstacleEvent
-
-	return result, nil
-}
-
-// Core data structures used in Loot Survivor events
-type AdventurerState struct {
-	Owner        string     `json:"owner"`
-	AdventurerID string     `json:"adventurer_id"`
-	Adventurer   Adventurer `json:"adventurer"`
-}
-
-type Adventurer struct {
-	LastActionBlock     uint64        `json:"last_action_block"`
-	Health              uint64        `json:"health"`
-	XP                  uint64        `json:"xp"`
-	Stats               Stats         `json:"stats"`
-	Gold                uint64        `json:"gold"`
-	Weapon              ItemPrimitive `json:"weapon"`
-	Chest               ItemPrimitive `json:"chest"`
-	Head                ItemPrimitive `json:"head"`
-	Waist               ItemPrimitive `json:"waist"`
-	Foot                ItemPrimitive `json:"foot"`
-	Hand                ItemPrimitive `json:"hand"`
-	Neck                ItemPrimitive `json:"neck"`
-	Ring                ItemPrimitive `json:"ring"`
-	BeastHealth         uint64        `json:"beast_health"`
-	StatPointsAvailable uint64        `json:"stat_points_available"`
-	ActionsPerBlock     uint64        `json:"actions_per_block"`
-	Mutated             bool          `json:"mutated"`
-}
-
-type AdventurerMetadata struct {
-	StartBlock    uint64 `json:"start_block"`
-	StartingStats Stats  `json:"starting_stats"`
-	Name          string `json:"name"`
-}
-
-type Stats struct {
-	Strength     uint64 `json:"strength"`
-	Dexterity    uint64 `json:"dexterity"`
-	Vitality     uint64 `json:"vitality"`
-	Intelligence uint64 `json:"intelligence"`
-	Wisdom       uint64 `json:"wisdom"`
-	Charisma     uint64 `json:"charisma"`
-	Luck         uint64 `json:"luck"`
-}
-
-type ItemPrimitive struct {
-	ID       uint64 `json:"id"`
-	XP       uint64 `json:"xp"`
-	Metadata uint64 `json:"metadata"`
-}
-
-type CombatSpec struct {
-	Tier     string        `json:"tier"`
-	ItemType string        `json:"item_type"`
-	Level    uint64        `json:"level"`
-	Specials SpecialPowers `json:"specials"`
-}
-
-type SpecialPowers struct {
-	Special1 uint64 `json:"special1"`
-	Special2 uint64 `json:"special2"`
-	Special3 uint64 `json:"special3"`
-}
-
-type ObstacleEvent struct {
-	AdventurerState AdventurerState `json:"adventurer_state"`
-	ObstacleDetails ObstacleDetails `json:"obstacle_details"`
-}
-
-type ObstacleDetails struct {
-	ID                 uint64 `json:"id"`
-	Level              uint64 `json:"level"`
-	DamageTaken        uint64 `json:"damage_taken"`
-	DamageLocation     uint64 `json:"damage_location"`
-	CriticalHit        bool   `json:"critical_hit"`
-	AdventurerXPReward uint64 `json:"adventurer_xp_reward"`
-	ItemXPReward       uint64 `json:"item_xp_reward"`
-}
-
-func Tier(parameter *felt.Felt) string {
-	parameterInt := parameter.Uint64()
-	switch parameterInt {
-	case 0:
-		return "None"
-	case 1:
-		return "T1"
-	case 2:
-		return "T2"
-	case 3:
-		return "T3"
-	case 4:
-		return "T4"
-	case 5:
-		return "T5"
-	}
-	return "UNKNOWN"
-}
-
-func ItemType(parameter *felt.Felt) string {
-	parameterInt := parameter.Uint64()
-	switch parameterInt {
-	case 0:
-		return "None"
-	case 1:
-		return "Magic_or_Cloth"
-	case 2:
-		return "Blade_or_Hide"
-	case 3:
-		return "Bludgeon_or_Metal"
-	case 4:
-		return "Necklace"
-	case 5:
-		return "Ring"
-	}
-	return "UNKNOWN"
-}
-
-func ParseAdventurerState(parameters []*felt.Felt) (AdventurerState, error) {
-	if len(parameters) != 41 {
-		return AdventurerState{}, ErrParsingAdventurerState
-	}
-
-	adventurer, adventurerErr := ParseAdventurer(parameters[2:41])
-	if adventurerErr != nil {
-		return AdventurerState{}, adventurerErr
-	}
-
-	return AdventurerState{
-		Owner:        parameters[0].String(),
-		AdventurerID: parameters[1].String(),
-		Adventurer:   adventurer,
-	}, nil
-}
-
-func ParseAdventurer(parameters []*felt.Felt) (Adventurer, error) {
-	if len(parameters) != 39 {
-		return Adventurer{}, ErrParsingAdventurer
-	}
-	stats, statsErr := ParseStats(parameters[3:10])
-	if statsErr != nil {
-		return Adventurer{}, statsErr
-	}
-	return Adventurer{
-		LastActionBlock: parameters[0].Uint64(),
-		Health:          parameters[1].Uint64(),
-		XP:              parameters[2].Uint64(),
-		Stats:           stats,
-		Gold:            parameters[10].Uint64(),
-		Weapon: ItemPrimitive{
-			ID:       parameters[11].Uint64(),
-			XP:       parameters[12].Uint64(),
-			Metadata: parameters[13].Uint64(),
-		},
-		Chest: ItemPrimitive{
-			ID:       parameters[14].Uint64(),
-			XP:       parameters[15].Uint64(),
-			Metadata: parameters[16].Uint64(),
-		},
-		Head: ItemPrimitive{
-			ID:       parameters[17].Uint64(),
-			XP:       parameters[18].Uint64(),
-			Metadata: parameters[19].Uint64(),
-		},
-		Waist: ItemPrimitive{
-			ID:       parameters[20].Uint64(),
-			XP:       parameters[21].Uint64(),
-			Metadata: parameters[22].Uint64(),
-		},
-		Foot: ItemPrimitive{
-			ID:       parameters[23].Uint64(),
-			XP:       parameters[24].Uint64(),
-			Metadata: parameters[25].Uint64(),
-		},
-		Hand: ItemPrimitive{
-			ID:       parameters[26].Uint64(),
-			XP:       parameters[27].Uint64(),
-			Metadata: parameters[28].Uint64(),
-		},
-		Neck: ItemPrimitive{
-			ID:       parameters[29].Uint64(),
-			XP:       parameters[30].Uint64(),
-			Metadata: parameters[31].Uint64(),
-		},
-		Ring: ItemPrimitive{
-			ID:       parameters[32].Uint64(),
-			XP:       parameters[33].Uint64(),
-			Metadata: parameters[34].Uint64(),
-		},
-		BeastHealth:         parameters[35].Uint64(),
-		StatPointsAvailable: parameters[36].Uint64(),
-		ActionsPerBlock:     parameters[37].Uint64(),
-		Mutated:             parameters[38].Uint64() > 0,
-	}, nil
-}
-
-func ParseAdventurerMetadata(parameters []*felt.Felt) (AdventurerMetadata, error) {
-	if len(parameters) != 9 {
-		return AdventurerMetadata{}, ErrParsingAdventurerMetadata
-	}
-
-	stats, statsErr := ParseStats(parameters[1:8])
-	if statsErr != nil {
-		return AdventurerMetadata{}, statsErr
-	}
-
-	nameHash := strings.TrimPrefix(parameters[8].String(), "0x")
-	decodedName, decodeErr := hex.DecodeString(nameHash)
-	if decodeErr != nil {
-		return AdventurerMetadata{}, decodeErr
-	}
-	name := string(decodedName)
-
-	return AdventurerMetadata{
-		StartBlock:    parameters[0].Uint64(),
-		StartingStats: stats,
-		Name:          name,
-	}, nil
-}
-
-func ParseStats(parameters []*felt.Felt) (Stats, error) {
-	if len(parameters) != 7 {
-		return Stats{}, ErrParsingStats
-	}
-	return Stats{
-		Strength:     parameters[0].Uint64(),
-		Dexterity:    parameters[1].Uint64(),
-		Vitality:     parameters[2].Uint64(),
-		Intelligence: parameters[3].Uint64(),
-		Wisdom:       parameters[4].Uint64(),
-		Charisma:     parameters[5].Uint64(),
-		Luck:         parameters[6].Uint64(),
-	}, nil
-}
-
-func ParseCombatSpec(parameters []*felt.Felt) (CombatSpec, error) {
-	if len(parameters) != 6 {
-		return CombatSpec{}, ErrParsingCombatSpec
-	}
-	return CombatSpec{
-		Tier:     Tier(parameters[0]),
-		ItemType: ItemType(parameters[1]),
-		Level:    parameters[2].Uint64(),
-		Specials: SpecialPowers{
-			Special1: parameters[3].Uint64(),
-			Special2: parameters[4].Uint64(),
-			Special3: parameters[5].Uint64(),
-		},
-	}, nil
-}
-
-func ParseObstacleEvent(parameters []*felt.Felt) (ObstacleEvent, error) {
-	if len(parameters) != 48 {
-		return ObstacleEvent{}, ErrParsingObstacleEvent
-	}
-
-	adventurerState, stateErr := ParseAdventurerState(parameters[0:41])
-	if stateErr != nil {
-		return ObstacleEvent{}, stateErr
-	}
-
-	obstacleDetails, detailsErr := ParseObstacleDetails(parameters[41:48])
-	if detailsErr != nil {
-		return ObstacleEvent{}, detailsErr
-	}
-
-	return ObstacleEvent{
-		AdventurerState: adventurerState,
-		ObstacleDetails: obstacleDetails,
-	}, nil
-}
-
-func ParseObstacleDetails(parameters []*felt.Felt) (ObstacleDetails, error) {
-	if len(parameters) != 7 {
-		return ObstacleDetails{}, ErrParsingObstacleDetails
-	}
-	return ObstacleDetails{
-		ID:                 parameters[0].Uint64(),
-		Level:              parameters[1].Uint64(),
-		DamageTaken:        parameters[2].Uint64(),
-		DamageLocation:     parameters[3].Uint64(),
-		CriticalHit:        parameters[4].Uint64() > 0,
-		AdventurerXPReward: parameters[5].Uint64(),
-		ItemXPReward:       parameters[6].Uint64(),
-	}, nil
 }

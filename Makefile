@@ -4,6 +4,6 @@ clean:
 	rm -f ./loot-survivor
 
 loot-survivor:
-	go build ./...
+	go build .
 
 build: clean loot-survivor

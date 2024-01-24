@@ -33,7 +33,7 @@ func CreateRootCommand() *cobra.Command {
 	abiCmd := CreateABICommand()
 	findDeploymentBlockCmd := CreateFindDeploymentCmd()
 	leaderboardsCmd := CreateLeaderboardsCmd()
-	reparseCmd := CreateReparseCmd()
+	reparseCmd := CreateParseCommand()
 	rootCmd.AddCommand(completionCmd, versionCmd, starknetCmd, abiCmd, findDeploymentBlockCmd, leaderboardsCmd, reparseCmd)
 
 	// By default, cobra Command objects write to stderr. We have to forcibly set them to output to
@@ -268,17 +268,9 @@ func CreateStarknetCommand() *cobra.Command {
 
 			go ContractEvents(ctx, provider, contractAddress, eventsChan, hotThreshold, time.Duration(hotInterval)*time.Millisecond, time.Duration(coldInterval)*time.Millisecond, fromBlock, toBlock, confirmations, batchSize)
 
-			parser, newParserErr := NewParser()
-			if newParserErr != nil {
-				return newParserErr
-			}
-
 			for event := range eventsChan {
-				parsedEvent, parseErr := parser.Parse(event)
-				if parseErr != nil {
-					return parseErr
-				}
-				serializedEvent, marshalErr := json.Marshal(parsedEvent)
+				unparsedEvent := ParsedEvent{Name: EVENT_UNKNOWN, Event: event}
+				serializedEvent, marshalErr := json.Marshal(unparsedEvent)
 				if marshalErr != nil {
 					cmd.ErrOrStderr().Write([]byte(marshalErr.Error()))
 				}
@@ -505,12 +497,12 @@ last dodged an obstacle with the adventurer.
 	return leaderboardsCmd
 }
 
-func CreateReparseCmd() *cobra.Command {
+func CreateParseCommand() *cobra.Command {
 	var infile, outfile string
 
-	reparseCmd := &cobra.Command{
-		Use:   "reparse",
-		Short: "Reparse an file (as produced by the \"stark events\" command) to process previously unknown events",
+	parseCmd := &cobra.Command{
+		Use:   "parse",
+		Short: "Parse a file (as produced by the \"stark events\" command) to process previously unknown events",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ifp := os.Stdin
 			var infileErr error
@@ -532,7 +524,7 @@ func CreateReparseCmd() *cobra.Command {
 				defer ofp.Close()
 			}
 
-			parser, newParserErr := NewParser()
+			parser, newParserErr := NewLootSurvivorParser()
 			if newParserErr != nil {
 				return newParserErr
 			}
@@ -591,8 +583,8 @@ func CreateReparseCmd() *cobra.Command {
 		},
 	}
 
-	reparseCmd.Flags().StringVarP(&infile, "infile", "i", "", "File containing crawled events from which to build the leaderboard (as produced by the \"loot-survivor stark events\" command, defaults to stdin)")
-	reparseCmd.Flags().StringVarP(&outfile, "outfile", "o", "", "File to write reparsed events to (defaults to stdout)")
+	parseCmd.Flags().StringVarP(&infile, "infile", "i", "", "File containing crawled events from which to build the leaderboard (as produced by the \"loot-survivor stark events\" command, defaults to stdin)")
+	parseCmd.Flags().StringVarP(&outfile, "outfile", "o", "", "File to write reparsed events to (defaults to stdout)")
 
-	return reparseCmd
+	return parseCmd
 }

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/moonstream-to/loot-survivor/bindings"
 )
 
 var LEADERBOARDS_API_URL string = "https://engineapi.moonstream.to/leaderboard/%s/scores"
@@ -72,14 +74,14 @@ func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			return []LeaderboardScore{}, unmarshalErr
 		}
 
-		if partialEvent.Name == EVENT_SLAYED_BEAST {
-			var event SlayedBeastEvent
+		if partialEvent.Name == bindings.Event_Game_Game_SlayedBeast {
+			var event bindings.Game_Game_SlayedBeast
 			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
 			}
 
-			adventurer := event.AdventurerState.AdventurerID
+			adventurer := event.AdventurerState.AdventurerId
 
 			owner := event.AdventurerState.Owner
 			activeOwners[adventurer] = owner
@@ -91,14 +93,14 @@ func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			if event.BeastSpecs.Level > maxLevel {
 				maxLevels[adventurer] = event.BeastSpecs.Level
 			}
-		} else if partialEvent.Name == EVENT_START_GAME {
-			var event StartGameEvent
+		} else if partialEvent.Name == bindings.Event_Game_Game_StartGame {
+			var event bindings.Game_Game_StartGame
 			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
 			}
 
-			adventurer := event.AdventurerState.AdventurerID
+			adventurer := event.AdventurerState.AdventurerId
 			name := event.AdventurerMeta.Name
 
 			names[adventurer] = fmt.Sprintf("%s - %s", name, adventurer)
@@ -136,14 +138,14 @@ func ArtfulDodgersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			return []LeaderboardScore{}, unmarshalErr
 		}
 
-		if partialEvent.Name == EVENT_DODGED_OBSTACLE {
-			var event DodgedObstacleEvent
+		if partialEvent.Name == bindings.Event_Game_Game_DodgedObstacle {
+			var event bindings.Game_Game_DodgedObstacle
 			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
 			}
 
-			adventurer := event.ObstacleEvent.AdventurerState.AdventurerID
+			adventurer := event.ObstacleEvent.AdventurerState.AdventurerId
 
 			owner := event.ObstacleEvent.AdventurerState.Owner
 			activeOwners[adventurer] = owner
@@ -155,14 +157,14 @@ func ArtfulDodgersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			if event.ObstacleEvent.ObstacleDetails.Level > maxLevel {
 				maxLevels[adventurer] = event.ObstacleEvent.ObstacleDetails.Level
 			}
-		} else if partialEvent.Name == EVENT_START_GAME {
-			var event StartGameEvent
+		} else if partialEvent.Name == bindings.Event_Game_Game_StartGame {
+			var event bindings.Game_Game_StartGame
 			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
 			}
 
-			adventurer := event.AdventurerState.AdventurerID
+			adventurer := event.AdventurerState.AdventurerId
 			name := event.AdventurerMeta.Name
 
 			names[adventurer] = fmt.Sprintf("%s - %s", name, adventurer)
