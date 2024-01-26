@@ -386,19 +386,19 @@ func CreateLeaderboardsCmd() *cobra.Command {
 	leaderboardsCmd.PersistentFlags().StringVarP(&leaderboardID, "leaderboard-id", "l", "", "Leaderboard ID for the Moonstream Leaderboard (look up or generate at https://moonstream.to, defaults to value of MOONSTREAM_LEADERBOARD_ID environment variable)")
 	leaderboardsCmd.PersistentFlags().StringVarP(&accessToken, "access-token", "t", "", "Access token for Moonstream API (get from https://moonstream.to, defaults to value of MOONSTREAM_ACCESS_TOKEN environment variable)")
 
-	beastSlayersCmd := &cobra.Command{
-		Use:   "beast-slayers",
-		Short: "Leaderboard of beast slayers",
-		Long: `Leaderboard of beast slayers
+	totalCmd := &cobra.Command{
+		Use:   "total",
+		Short: "Leaderboard of all player events in Loot Survivor",
+		Long: `Leaderboard of all player events in Loot Survivor
 
 NOTE: This is a leaderboard of adventurers, not their owners.
 
-The primary score on this leaderboard is the number of beasts slayed by each adventurer.
+This leaderboard awards a number of points to each event that an adventurer could be subject to. From
+these points, it calculates a total Loot Survivor score for each adventurer. The leaderboard also reports
+the individual event scores for each adventurer in the "points_data" field.
 
-The leaderboard tracks the maximum level of beast slain by each adventurer as a secondary score.
-
-Finally, the leaderboard also lists the active owner for each adventurer, defined as the account that
-last used the adventurer in a game session.
+The leaderboard also lists the active owner for each adventurer, defined as the account that last used
+the adventurer in a game session.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ifp := os.Stdin
@@ -421,7 +421,7 @@ last used the adventurer in a game session.
 				defer ofp.Close()
 			}
 
-			leaderboard, leaderboardErr := BeastSlayersLeaderboard(ifp)
+			leaderboard, leaderboardErr := LootSurvivorLeaderboard(ifp)
 			if leaderboardErr != nil {
 				return leaderboardErr
 			}
@@ -439,60 +439,7 @@ last used the adventurer in a game session.
 		},
 	}
 
-	artfulDodgersCmd := &cobra.Command{
-		Use:   "artful-dodgers",
-		Short: "Leaderboard of the best obstacle dodgers",
-		Long: `Leaderboard of the best obstacle dodgers
-
-NOTE: This is a leaderboard of adventurers, not their owners.
-
-The primary score on this leaderboard is the number of obstacles dodged by each adventurer.
-
-The leaderboard tracks the maximum level of obstacles dodged by each adventurer as a secondary score.
-
-Finally, the leaderboard also lists the active owner for each adventurer, defined as the account that
-last dodged an obstacle with the adventurer.
-`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			ifp := os.Stdin
-			var infileErr error
-			if infile != "" && infile != "-" {
-				ifp, infileErr = os.Open(infile)
-				if infileErr != nil {
-					return infileErr
-				}
-				defer ifp.Close()
-			}
-
-			ofp := os.Stdout
-			var outfileErr error
-			if outfile != "" {
-				ofp, outfileErr = os.Create(outfile)
-				if outfileErr != nil {
-					return outfileErr
-				}
-				defer ofp.Close()
-			}
-
-			leaderboard, leaderboardErr := ArtfulDodgersLeaderboard(ifp)
-			if leaderboardErr != nil {
-				return leaderboardErr
-			}
-
-			outputEncoder := json.NewEncoder(ofp)
-			outputEncoder.Encode(leaderboard)
-
-			if push {
-				pushErr := Push(leaderboardID, accessToken, leaderboard, true)
-				if pushErr != nil {
-					return pushErr
-				}
-			}
-			return nil
-		},
-	}
-
-	leaderboardsCmd.AddCommand(beastSlayersCmd, artfulDodgersCmd)
+	leaderboardsCmd.AddCommand(totalCmd)
 
 	return leaderboardsCmd
 }
