@@ -250,7 +250,7 @@ func CreateStarknetCommand() *cobra.Command {
 			provider := rpc.NewProvider(client)
 			ctx := context.Background()
 
-			eventsChan := make(chan CrawledEvent)
+			eventsChan := make(chan RawEvent)
 
 			// If "fromBlock" is not specified, find the block at which the contract was deployed and
 			// use that instead.
@@ -524,7 +524,7 @@ func CreateParseCommand() *cobra.Command {
 				defer ofp.Close()
 			}
 
-			parser, newParserErr := NewLootSurvivorParser()
+			parser, newParserErr := NewEventParser()
 			if newParserErr != nil {
 				return newParserErr
 			}
@@ -540,7 +540,7 @@ func CreateParseCommand() *cobra.Command {
 				passThrough := true
 
 				if partialEvent.Name == EVENT_UNKNOWN {
-					var event CrawledEvent
+					var event RawEvent
 					json.Unmarshal(partialEvent.Event, &event)
 					parsedEvent, parseErr := parser.Parse(event)
 					if parseErr == nil {

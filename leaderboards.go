@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-
-	"github.com/moonstream-to/loot-survivor/bindings"
 )
 
 var LEADERBOARDS_API_URL string = "https://engineapi.moonstream.to/leaderboard/%s/scores"
@@ -74,8 +72,8 @@ func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			return []LeaderboardScore{}, unmarshalErr
 		}
 
-		if partialEvent.Name == bindings.Event_Game_Game_SlayedBeast {
-			var event bindings.Game_Game_SlayedBeast
+		if partialEvent.Name == Event_Game_Game_SlayedBeast {
+			var event Game_Game_SlayedBeast
 			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
@@ -93,8 +91,8 @@ func BeastSlayersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			if event.BeastSpecs.Level > maxLevel {
 				maxLevels[adventurer] = event.BeastSpecs.Level
 			}
-		} else if partialEvent.Name == bindings.Event_Game_Game_StartGame {
-			var event bindings.Game_Game_StartGame
+		} else if partialEvent.Name == Event_Game_Game_StartGame {
+			var event Game_Game_StartGame
 			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
@@ -138,8 +136,8 @@ func ArtfulDodgersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			return []LeaderboardScore{}, unmarshalErr
 		}
 
-		if partialEvent.Name == bindings.Event_Game_Game_DodgedObstacle {
-			var event bindings.Game_Game_DodgedObstacle
+		if partialEvent.Name == Event_Game_Game_DodgedObstacle {
+			var event Game_Game_DodgedObstacle
 			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
@@ -157,8 +155,8 @@ func ArtfulDodgersLeaderboard(eventsFile *os.File) ([]LeaderboardScore, error) {
 			if event.ObstacleEvent.ObstacleDetails.Level > maxLevel {
 				maxLevels[adventurer] = event.ObstacleEvent.ObstacleDetails.Level
 			}
-		} else if partialEvent.Name == bindings.Event_Game_Game_StartGame {
-			var event bindings.Game_Game_StartGame
+		} else if partialEvent.Name == Event_Game_Game_StartGame {
+			var event Game_Game_StartGame
 			unmarshalErr := json.Unmarshal(partialEvent.Event, &event)
 			if unmarshalErr != nil {
 				return []LeaderboardScore{}, unmarshalErr
